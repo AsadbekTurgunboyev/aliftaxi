@@ -40,7 +40,6 @@ import com.example.taxi.ui.home.transfer.transfermoney.TransferMoneyViewModel
 import com.example.taxi.ui.splash.SplashViewModel
 import com.example.taxi.utils.ClockUtils
 import com.example.taxi.utils.ConversionUtil
-import com.example.taxi.utils.SphericalUtil
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -64,7 +63,7 @@ val koinModule = module {
 
     factory { ConversionUtil }
 
-    factory { SphericalUtil() }
+    factory { com.example.taxi.utils.SphericalUtil() }
 
     factory { EndForgotCalculator() }
 

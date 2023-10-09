@@ -13,7 +13,6 @@ import com.example.taxi.domain.model.order.OrderData
 import com.example.taxi.domain.model.order.updateTextView
 import com.example.taxi.utils.ConversionUtil.calculateDistance
 import com.example.taxi.utils.convertToCyrillic
-import com.example.taxi.utils.setAddress
 import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.*

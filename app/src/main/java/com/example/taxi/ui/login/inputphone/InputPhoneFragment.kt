@@ -49,7 +49,8 @@ class InputPhoneFragment : Fragment() {
         viewBinding.fbnInputPhone.setOnClickListener {
             if (!validateInputs()) return@setOnClickListener
 
-            val phone = "${viewBinding.textInputLayout.prefixText}${viewBinding.edtInputPhone.text}"
+            val phone = "${viewBinding.textInputLayout.prefixText} ${viewBinding.edtInputPhone.text}"
+
             registerViewModel.register(
                 RegisterRequest(
                     PhoneNumberUtil.formatPhoneNumber(phoneNumber = phone, countryCode = "UZ")

@@ -125,6 +125,7 @@
             android:textColor="@color/text_black_white"
             android:textStyle="bold"
             android:textAllCaps="false"
+            android:visibility="gone"
             android:layout_marginHorizontal="@dimen/_10sdp"
             app:cornerRadius="@dimen/_7sdp"
             android:paddingVertical="@dimen/_12sdp"

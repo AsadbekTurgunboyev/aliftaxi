@@ -1,19 +1,23 @@
 package com.example.taxi.ui.home.driver
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.*
 import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -21,12 +25,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.coroutineScope
 import com.example.taxi.R
-import com.example.taxi.custom.swipebtn.SwipeButton
 import com.example.taxi.databinding.FragmentDriverBinding
 import com.example.taxi.dbModels.TimerViewModel
 import com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.*
+import com.example.taxi.domain.location.LocationTracker
 import com.example.taxi.domain.model.DashboardData
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.order.OrderAccept
@@ -44,58 +47,30 @@ import com.example.taxi.utils.*
 import com.example.taxi.utils.ConstantsUtils.locationDestination
 import com.example.taxi.utils.ConstantsUtils.locationDestination2
 import com.example.taxi.utils.ConstantsUtils.locationStart
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.mapbox.api.directions.v5.models.Bearing
+import com.google.android.material.button.MaterialButton
 import com.mapbox.api.directions.v5.models.DirectionsRoute
-import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.MapboxMap
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.LocationPuck2D
-import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.location
-import com.mapbox.navigation.base.TimeFormat
-import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
-import com.mapbox.navigation.base.extensions.applyLanguageAndVoiceUnitOptions
 import com.mapbox.navigation.base.formatter.DistanceFormatterOptions
 import com.mapbox.navigation.base.formatter.UnitType
-import com.mapbox.navigation.base.options.NavigationOptions
-import com.mapbox.navigation.base.route.RouterCallback
-import com.mapbox.navigation.base.route.RouterFailure
-import com.mapbox.navigation.base.route.RouterOrigin
-import com.mapbox.navigation.core.MapboxNavigation
-import com.mapbox.navigation.core.MapboxNavigationProvider
-import com.mapbox.navigation.core.directions.session.RoutesObserver
-import com.mapbox.navigation.core.formatter.MapboxDistanceFormatter
-import com.mapbox.navigation.core.internal.extensions.flowRouteProgress
 import com.mapbox.navigation.core.replay.MapboxReplayer
-import com.mapbox.navigation.core.replay.ReplayLocationEngine
 import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
 import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
-import com.mapbox.navigation.core.trip.session.LocationMatcherResult
-import com.mapbox.navigation.core.trip.session.LocationObserver
-import com.mapbox.navigation.core.trip.session.RouteProgressObserver
 import com.mapbox.navigation.ui.maneuver.api.MapboxManeuverApi
-import com.mapbox.navigation.ui.maps.camera.NavigationCamera
-import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
-import com.mapbox.navigation.ui.maps.camera.lifecycle.NavigationBasicGesturesHandler
-import com.mapbox.navigation.ui.maps.camera.state.NavigationCameraState
-import com.mapbox.navigation.ui.maps.camera.transition.NavigationCameraTransitionOptions
-import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
-import com.mapbox.navigation.ui.maps.route.RouteLayerConstants.TOP_LEVEL_ROUTE_LINE_LAYER_ID
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowApi
-import com.mapbox.navigation.ui.maps.route.arrow.api.MapboxRouteArrowView
-import com.mapbox.navigation.ui.maps.route.arrow.model.RouteArrowOptions
-import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
-import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
-import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineOptions
-import com.mapbox.navigation.ui.maps.route.line.model.RouteLine
-import com.mapbox.navigation.ui.tripprogress.api.MapboxTripProgressApi
 import com.mapbox.navigation.ui.tripprogress.model.*
 import com.tapadoo.alerter.Alerter
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -103,7 +78,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class DriverFragment : Fragment() {
+class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
 
     private companion object {
@@ -111,9 +86,9 @@ class DriverFragment : Fragment() {
 
     }
 
-    private val networkViewModel : NetworkViewModel by viewModel()
+    private lateinit var locationTracker: LocationTracker
+    private val networkViewModel: NetworkViewModel by viewModel()
     private lateinit var networkReceiver: NetworkReceiver
-    private lateinit var viewModel: TimerViewModel
     private var wakeLock: PowerManager.WakeLock? = null
     private var timer: ForwardsTimerUtil? = null
     private var isOrderStarted: Boolean = false
@@ -121,7 +96,14 @@ class DriverFragment : Fragment() {
     private val orderViewModel: OrderViewModel by sharedViewModel()
     private val homeViewModel: HomeViewModel by sharedViewModel()
     private val driverViewModel: DriverViewModel by sharedViewModel()
-
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var locationCallback: LocationCallback
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                enableLocationComponent()
+            }
+        }
     private var seconds: Int = 0
     private lateinit var pauseViewModel: TimerViewModel
     private val TIMER_MESSAGE_CODE = 1
@@ -172,14 +154,11 @@ class DriverFragment : Fragment() {
     private val mapboxReplayer = MapboxReplayer()
 
     private val replayProgressObserver = ReplayProgressObserver(mapboxReplayer)
-    private lateinit var mapboxNavigation: MapboxNavigation
-    private lateinit var navigationCamera: NavigationCamera
-    private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
+//    private lateinit var mapboxNavigation: MapboxNavigation
+//    private lateinit var navigationCamera: NavigationCamera
+//    private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
 
-    lateinit var estimateTime: TextView
-    lateinit var acceptOrderButton: SwipeButton
 
-    private lateinit var acceptDialog: Dialog
     private val pixelDensity = Resources.getSystem().displayMetrics.density
     private val overviewPadding: EdgeInsets by lazy {
         EdgeInsets(
@@ -218,117 +197,118 @@ class DriverFragment : Fragment() {
     lateinit var viewBinding: FragmentDriverBinding
 
     private lateinit var maneuverApi: MapboxManeuverApi
-    private lateinit var tripProgressApi: MapboxTripProgressApi
-    private lateinit var routeLineApi: MapboxRouteLineApi
-    private lateinit var routeLineView: MapboxRouteLineView
-    private val routeArrowApi: MapboxRouteArrowApi = MapboxRouteArrowApi()
-    private lateinit var routeArrowView: MapboxRouteArrowView
-    private val navigationLocationProvider = NavigationLocationProvider()
-    private val locationObserver = object : LocationObserver {
-        var firstLocationUpdateReceived = false
 
-        override fun onNewRawLocation(rawLocation: Location) {
-            // not handled
-        }
-
-
-        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
-            val enhancedLocation = locationMatcherResult.enhancedLocation
-            // update location puck's position on the map
-            navigationLocationProvider.changePosition(
-                location = enhancedLocation,
-                keyPoints = locationMatcherResult.keyPoints,
-            )
-
-            // update camera position to account for new location
-            viewportDataSource.onLocationChanged(enhancedLocation)
-            viewportDataSource.evaluate()
-
-            // if this is the first location update the activity has received,
-            // it's best to immediately move the camera to the current user location
-            if (!firstLocationUpdateReceived) {
-                firstLocationUpdateReceived = true
-                navigationCamera.requestNavigationCameraToOverview(
-                    stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
-                        .maxDuration(0) // instant transition
-                        .build()
-                )
-            }
-        }
-    }
+    //    private lateinit var tripProgressApi: MapboxTripProgressApi
+//    private lateinit var routeLineApi: MapboxRouteLineApi
+//    private lateinit var routeLineView: MapboxRouteLineView
+//    private val routeArrowApi: MapboxRouteArrowApi = MapboxRouteArrowApi()
+//    private lateinit var routeArrowView: MapboxRouteArrowView
+//    private val navigationLocationProvider = NavigationLocationProvider()
+//    private val locationObserver = object : LocationObserver {
+//        var firstLocationUpdateReceived = false
+//
+//        override fun onNewRawLocation(rawLocation: Location) {
+//            // not handled
+//        }
+//
+//
+//        override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
+//            val enhancedLocation = locationMatcherResult.enhancedLocation
+//            // update location puck's position on the map
+//            navigationLocationProvider.changePosition(
+//                location = enhancedLocation,
+//                keyPoints = locationMatcherResult.keyPoints,
+//            )
+//
+//            // update camera position to account for new location
+//            viewportDataSource.onLocationChanged(enhancedLocation)
+//            viewportDataSource.evaluate()
+//
+//            // if this is the first location update the activity has received,
+//            // it's best to immediately move the camera to the current user location
+//            if (!firstLocationUpdateReceived) {
+//                firstLocationUpdateReceived = true
+//                navigationCamera.requestNavigationCameraToOverview(
+//                    stateTransitionOptions = NavigationCameraTransitionOptions.Builder()
+//                        .maxDuration(0) // instant transition
+//                        .build()
+//                )
+//            }
+//        }
+//    }
     private lateinit var mapboxMap: MapboxMap
 
-    private val routeProgressObserver = RouteProgressObserver { routeProgress ->
-        // update the camera position to account for the progressed fragment of the route
-        viewportDataSource.onRouteProgressChanged(routeProgress)
-        viewportDataSource.evaluate()
-
-
-        // draw the upcoming maneuver arrow on the map
-        val style = mapboxMap.getStyle()
-        if (style != null) {
-            val maneuverArrowResult = routeArrowApi.addUpcomingManeuverArrow(routeProgress)
-            routeArrowView.renderManeuverUpdate(style, maneuverArrowResult)
-        }
-
-        // update top banner with maneuver instructions
-        val maneuvers = maneuverApi.getManeuvers(routeProgress)
-        maneuvers.fold(
-            { error ->
-                Toast.makeText(
-                    context,
-                    error.errorMessage,
-                    Toast.LENGTH_SHORT
-                ).show()
-            },
-            {
-//                viewBinding.maneuverView.visibility = View.VISIBLE
-                viewBinding.maneuverView.renderManeuvers(maneuvers)
-            }
-        )
-
-        // update bottom trip progress summary
-//        viewBinding.tripProgressView.render(
-//            tripProgressApi.getTripProgress(routeProgress)
+//    private val routeProgressObserver = RouteProgressObserver { routeProgress ->
+//        // update the camera position to account for the progressed fragment of the route
+//        viewportDataSource.onRouteProgressChanged(routeProgress)
+//        viewportDataSource.evaluate()
+//
+//
+//        // draw the upcoming maneuver arrow on the map
+//        val style = mapboxMap.getStyle()
+//        if (style != null) {
+//            val maneuverArrowResult = routeArrowApi.addUpcomingManeuverArrow(routeProgress)
+//            routeArrowView.renderManeuverUpdate(style, maneuverArrowResult)
+//        }
+//
+//        // update top banner with maneuver instructions
+//        val maneuvers = maneuverApi.getManeuvers(routeProgress)
+//        maneuvers.fold(
+//            { error ->
+//                Toast.makeText(
+//                    context,
+//                    error.errorMessage,
+//                    Toast.LENGTH_SHORT
+//                ).show()
+//            },
+//            {
+////                viewBinding.maneuverView.visibility = View.VISIBLE
+//                viewBinding.maneuverView.renderManeuvers(maneuvers)
+//            }
 //        )
-    }
+//
+//        // update bottom trip progress summary
+////        viewBinding.tripProgressView.render(
+////            tripProgressApi.getTripProgress(routeProgress)
+////        )
+//    }
 
-    private val replayLocationEngine = ReplayLocationEngine(mapboxReplayer)
+//    private val replayLocationEngine = ReplayLocationEngine(mapboxReplayer)
 
-    private val routesObserver = RoutesObserver { routeUpdateResult ->
-        if (routeUpdateResult.routes.isNotEmpty()) {
-            // generate route geometries asynchronously and render them
-            val routeLines = routeUpdateResult.routes.map { RouteLine(it, null) }
-
-            routeLineApi.setRoutes(
-                routeLines
-            ) { value ->
-                mapboxMap.getStyle()?.apply {
-                    routeLineView.renderRouteDrawData(this, value)
-                }
-            }
-
-            // update the camera position to account for the new route
-            viewportDataSource.onRouteChanged(routeUpdateResult.routes.first())
-            viewportDataSource.evaluate()
-        } else {
-            // remove the route line and route arrow from the map
-            val style = mapboxMap.getStyle()
-            if (style != null) {
-                routeLineApi.clearRouteLine { value ->
-                    routeLineView.renderClearRouteLineValue(
-                        style,
-                        value
-                    )
-                }
-                routeArrowView.render(style, routeArrowApi.clearArrows())
-            }
-
-            // remove the route reference from camera position evaluations
-            viewportDataSource.clearRouteData()
-            viewportDataSource.evaluate()
-        }
-    }
+//    private val routesObserver = RoutesObserver { routeUpdateResult ->
+//        if (routeUpdateResult.routes.isNotEmpty()) {
+//            // generate route geometries asynchronously and render them
+//            val routeLines = routeUpdateResult.routes.map { RouteLine(it, null) }
+//
+//            routeLineApi.setRoutes(
+//                routeLines
+//            ) { value ->
+//                mapboxMap.getStyle()?.apply {
+//                    routeLineView.renderRouteDrawData(this, value)
+//                }
+//            }
+//
+//            // update the camera position to account for the new route
+//            viewportDataSource.onRouteChanged(routeUpdateResult.routes.first())
+//            viewportDataSource.evaluate()
+//        } else {
+//            // remove the route line and route arrow from the map
+//            val style = mapboxMap.getStyle()
+//            if (style != null) {
+//                routeLineApi.clearRouteLine { value ->
+//                    routeLineView.renderClearRouteLineValue(
+//                        style,
+//                        value
+//                    )
+//                }
+//                routeArrowView.render(style, routeArrowApi.clearArrows())
+//            }
+//
+//            // remove the route reference from camera position evaluations
+//            viewportDataSource.clearRouteData()
+//            viewportDataSource.evaluate()
+//        }
+//    }
 
     private var isRouteFetched = false
 
@@ -349,21 +329,24 @@ class DriverFragment : Fragment() {
         requireContext().registerReceiver(networkReceiver, filter)
 
         networkViewModel.response.observe(viewLifecycleOwner) { response ->
-            when(response.state){
-                ResourceState.SUCCESS ->{
+            when (response.state) {
+                ResourceState.SUCCESS -> {
 
                 }
-                ResourceState.ERROR ->{
-                    if (response.message == NO_CONNECT){
+
+                ResourceState.ERROR -> {
+                    if (response.message == NO_CONNECT) {
+                        Log.d("bekor", "onCreateView: buyurtma bekor qilind: ${response.message} ")
                         val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
                         intent.putExtra(SocketConfig.ORDER_CANCELLED, NO_CONNECT)
-                        requireActivity().sendBroadcast(intent)
+                        context?.sendBroadcast(intent)
 
                     }
 
 
                 }
-                ResourceState.LOADING ->{}
+
+                ResourceState.LOADING -> {}
             }
         }
 
@@ -375,11 +358,15 @@ class DriverFragment : Fragment() {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("zakaz", "onViewCreated: bu driver")
 //        viewModel = ViewModelProvider(this)[TimerViewModel::class.java]
 //        viewModel.timeLiveData.observe(viewLifecycleOwner) { (time, message) ->
 //            updateUITime(time, message)
 //        }
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
+
+        locationTracker = LocationTracker.getInstance(requireContext())
 //        handlerTimer = Handler(Looper.getMainLooper())
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -411,7 +398,6 @@ class DriverFragment : Fragment() {
         })
 
         driverViewModel.orderStartCompleteLiveData.observe(viewLifecycleOwner) {
-            Log.d("xatolik", "onViewCreated: $it")
             setBottomSheetSetting(it)
         }
 
@@ -425,7 +411,6 @@ class DriverFragment : Fragment() {
         orderViewModel.acceptOrder.observe(viewLifecycleOwner) {
             setOrderSettingsUi(it)
         }
-
 
         driverViewModel.arriveOrder.observe(viewLifecycleOwner) {
             val timestampMilliseconds: Long = System.currentTimeMillis()
@@ -443,20 +428,16 @@ class DriverFragment : Fragment() {
 
             startOrderUi(it)
         }
-        driverViewModel.completeOrder.observe(viewLifecycleOwner) {
-            completeOrderUi(it)
-
-        }
 
         viewBinding.bottomDialog.icPauseStart.setOnClickListener {
             if (homeViewModel.dashboardLiveData.value?.isPaused() == true) {
                 handlerTimer.removeMessages(TIMER_MESSAGE_CODE)
-
                 homeViewModel.startDrive()
+
             } else {
                 handlerTimer.sendEmptyMessageDelayed(TIMER_MESSAGE_CODE, 1000)
-
-
+                locationTracker.resumeTracking(this)
+                locationTracker.pauseTracking()
                 homeViewModel.pauseDrive()
             }
         }
@@ -467,126 +448,135 @@ class DriverFragment : Fragment() {
         }
 
 
-        mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
-            MapboxNavigationProvider.retrieve()
-        } else {
-            MapboxNavigationProvider.create(
-                NavigationOptions.Builder(applicationContext = requireContext())
-                    .accessToken(getString(R.string.mapbox_access_token))
-                    // comment out the location engine setting block to disable simulation
-//                    .locationEngine(replayLocationEngine)
-                    .build()
-            )
-        }
-        viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap)
-        navigationCamera = NavigationCamera(
-            mapboxMap,
-            viewBinding.mapView.camera,
-            viewportDataSource
-        )
+//        mapboxNavigation = if (MapboxNavigationProvider.isCreated()) {
+//            MapboxNavigationProvider.retrieve()
+//        } else {
+//            MapboxNavigationProvider.create(
+//                NavigationOptions.Builder(applicationContext = requireContext())
+//                    .accessToken(getString(R.string.mapbox_access_token))
+//                    // comment out the location engine setting block to disable simulation
+////                    .locationEngine(replayLocationEngine)
+//                    .build()
+//            )
+//        }
+//        viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap)
+//        navigationCamera = NavigationCamera(
+//            mapboxMap,
+//            viewBinding.mapView.camera,
+//            viewportDataSource
+//        )
 
-        viewBinding.mapView.camera.addCameraAnimationsLifecycleListener(
-            NavigationBasicGesturesHandler(navigationCamera)
-        )
+//        viewBinding.mapView.camera.addCameraAnimationsLifecycleListener(
+//            NavigationBasicGesturesHandler(navigationCamera)
+//        )
 
-        navigationCamera.registerNavigationCameraStateChangeObserver { navigationCameraState ->
-            // shows/hide the recenter button depending on the camera state
-            when (navigationCameraState) {
-                NavigationCameraState.TRANSITION_TO_FOLLOWING,
-                NavigationCameraState.FOLLOWING -> viewBinding.recenter.visibility = View.INVISIBLE
-                NavigationCameraState.TRANSITION_TO_OVERVIEW,
-                NavigationCameraState.OVERVIEW,
-                NavigationCameraState.IDLE -> viewBinding.recenter.visibility = View.VISIBLE
-            }
-        }
-        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            viewportDataSource.overviewPadding = landscapeOverviewPadding
-        } else {
-            viewportDataSource.overviewPadding = overviewPadding
-        }
-        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            viewportDataSource.followingPadding = landscapeFollowingPadding
-        } else {
-            viewportDataSource.followingPadding = followingPadding
-        }
+//        navigationCamera.registerNavigationCameraStateChangeObserver { navigationCameraState ->
+//            // shows/hide the recenter button depending on the camera state
+//            when (navigationCameraState) {
+//                NavigationCameraState.TRANSITION_TO_FOLLOWING,
+//                NavigationCameraState.FOLLOWING -> viewBinding.recenter.visibility = View.INVISIBLE
+//                NavigationCameraState.TRANSITION_TO_OVERVIEW,
+//                NavigationCameraState.OVERVIEW,
+//                NavigationCameraState.IDLE -> viewBinding.recenter.visibility = View.VISIBLE
+//            }
+//        }
+//        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            viewportDataSource.overviewPadding = landscapeOverviewPadding
+//        } else {
+//            viewportDataSource.overviewPadding = overviewPadding
+//        }
+//        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            viewportDataSource.followingPadding = landscapeFollowingPadding
+//        } else {
+//            viewportDataSource.followingPadding = followingPadding
+//        }
 
-        val distanceFormatterOptions = mapboxNavigation
-            .navigationOptions
-            .distanceFormatterOptions
-
+//        val distanceFormatterOptions = mapboxNavigation
+//            .navigationOptions
+//            .distanceFormatterOptions
+//
 
         // initialize maneuver api that feeds the data to the top banner maneuver view
-        maneuverApi = MapboxManeuverApi(
-            MapboxDistanceFormatter(distanceFormatterOptions)
-        )
+//        maneuverApi = MapboxManeuverApi(
+//            MapboxDistanceFormatter(distanceFormatterOptions)
+//        )
 
-        tripProgressApi = MapboxTripProgressApi(
-            TripProgressUpdateFormatter.Builder(requireContext())
-                .distanceRemainingFormatter(
-                    DistanceRemainingFormatter(distanceFormatter)
-                    /**maybe change [distanceFormatterOptions] */
-                )
-                .timeRemainingFormatter(
-                    TimeRemainingFormatter(requireContext())
-                )
-                .percentRouteTraveledFormatter(
-                    PercentDistanceTraveledFormatter()
-                )
-                .estimatedTimeToArrivalFormatter(
-                    EstimatedTimeToArrivalFormatter(requireContext(), TimeFormat.NONE_SPECIFIED)
-                )
-                .build()
-        )
+//        tripProgressApi = MapboxTripProgressApi(
+//            TripProgressUpdateFormatter.Builder(requireContext())
+//                .distanceRemainingFormatter(
+//                    DistanceRemainingFormatter(distanceFormatter)
+//                    /**maybe change [distanceFormatterOptions] */
+//                )
+//                .timeRemainingFormatter(
+//                    TimeRemainingFormatter(requireContext())
+//                )
+//                .percentRouteTraveledFormatter(
+//                    PercentDistanceTraveledFormatter()
+//                )
+//                .estimatedTimeToArrivalFormatter(
+//                    EstimatedTimeToArrivalFormatter(requireContext(), TimeFormat.NONE_SPECIFIED)
+//                )
+//                .build()
+//        )
 
-        val mapboxRouteLineOptions = MapboxRouteLineOptions.Builder(requireContext())
-            .withRouteLineBelowLayerId("road-label")
-            .build()
-
-        lifecycle.coroutineScope.launch {
-            mapboxNavigation.flowRouteProgress().collect {
-                val value = tripProgressApi.getTripProgress(it)
-                viewBinding.bottomDialog.distanceTextViewDialog.text =
-                    value.formatter.getDistanceRemaining(value.distanceRemaining)
-
-                viewBinding.bottomDialog.timeRemainingTextView.text =
-                    value.formatter.getTimeRemaining(value.currentLegTimeRemaining)
-//                viewBinding.remainingTimeTextView.text =
-//                    "Mijozni oling: ${value.formatter.getTimeRemaining(value.currentLegTimeRemaining)}"
-            }
-        }
+//        val mapboxRouteLineOptions = MapboxRouteLineOptions.Builder(requireContext())
+//            .withRouteLineBelowLayerId("road-label")
+//            .build()
+//
+//        lifecycle.coroutineScope.launch {
+//            mapboxNavigation.flowRouteProgress().collect {
+//                val value = tripProgressApi.getTripProgress(it)
+//                viewBinding.bottomDialog.distanceTextViewDialog.text =
+//                    value.formatter.getDistanceRemaining(value.distanceRemaining)
+//
+//                viewBinding.bottomDialog.timeRemainingTextView.text =
+//                    value.formatter.getTimeRemaining(value.currentLegTimeRemaining)
+////                viewBinding.remainingTimeTextView.text =
+////                    "Mijozni oling: ${value.formatter.getTimeRemaining(value.currentLegTimeRemaining)}"
+//            }
+//        }
 
         viewBinding.bottomDialog.headerPeek.doOnLayout {
             bottomSheetBehavior.peekHeight = it.measuredHeight
         }
-        routeLineApi = MapboxRouteLineApi(mapboxRouteLineOptions)
-        routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
+//        routeLineApi = MapboxRouteLineApi(mapboxRouteLineOptions)
+//        routeLineView = MapboxRouteLineView(mapboxRouteLineOptions)
 
         // initialize maneuver arrow view to draw arrows on the map
-        val routeArrowOptions = RouteArrowOptions.Builder(requireContext())
-            .withAboveLayerId(TOP_LEVEL_ROUTE_LINE_LAYER_ID).build()
-        routeArrowView = MapboxRouteArrowView(routeArrowOptions)
+//        val routeArrowOptions = RouteArrowOptions.Builder(requireContext())
+//            .withAboveLayerId(TOP_LEVEL_ROUTE_LINE_LAYER_ID).build()
+//        routeArrowView = MapboxRouteArrowView(routeArrowOptions)
 
         viewBinding.bottomDialog.swipeButton.onSwipedOnListener = {
             when (currentBottomStatus) {
 
                 DriveAction.STARTED -> {
+                    Log.d("zakaz", "onViewCreated: started")
+
                     viewBinding.bottomDialog.swipeButton.checkedText =
                         getString(R.string.downloading)
-                    driverViewModel.completedOrder()
+                    setFinishDialog()
 
                 }
+
                 DriveAction.ARRIVED -> {
+                    Log.d("zakaz", "onViewCreated: arrived")
+
                     viewBinding.bottomDialog.swipeButton.checkedText =
                         getString(R.string.downloading)
                     viewBinding.bottomDialog.swipeButton.uncheckedText = getString(R.string.finish)
                     driverViewModel.startOrder()
                 }
+
                 DriveAction.COMPLETED -> {
+                    Log.d("zakaz", "onViewCreated: completed")
 
 
                 }
+
                 DriveAction.ACCEPT -> {
 
+                    Log.d("zakaz", "onViewCreated: accept")
                     viewBinding.bottomDialog.swipeButton.checkedText =
                         getString(R.string.downloading)
                     viewBinding.bottomDialog.swipeButton.uncheckedText = getString(R.string.lets_go)
@@ -612,28 +602,46 @@ class DriverFragment : Fragment() {
 //            Style.MAPBOX_STREETS
             style
         ) {
+            when (PackageManager.PERMISSION_GRANTED) {
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) -> {
+                    enableLocationComponent()
+                }
+
+                else -> {
+                    // Request permission
+                    requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+            }
 
             when (preferenceManager.getDriverStatus()) {
                 UserPreferenceManager.DriverStatus.ACCEPTED -> {
-                    findRoute(
-                        Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude),
-                        Point.fromLngLat(
-                            locationDestination.placeLongitude,
-                            locationDestination.placeLatitude
-                        )
-                    )
+
+                    viewBinding.buttonNavigator.visibility = View.VISIBLE
+//                    findRoute(
+//                        Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude),
+//                        Point.fromLngLat(
+//                            locationDestination.placeLongitude,
+//                            locationDestination.placeLatitude
+//                        )
+//                    )
                 }
 
                 UserPreferenceManager.DriverStatus.ARRIVED -> {
+                    viewBinding.buttonNavigator.visibility = View.GONE
+
                     locationDestination2?.let {
-                        changeDestination(
-                            destination = Point.fromLngLat(
-                                it.placeLongitude,
-                                it.placeLatitude
-                            )
-                        )
+//                        changeDestination(
+//                            destination = Point.fromLngLat(
+//                                it.placeLongitude,
+//                                it.placeLatitude
+//                            )
+//                        )
                     }
                 }
+
                 else -> {
                     clearRouteAndStopNavigation()
                 }
@@ -641,6 +649,19 @@ class DriverFragment : Fragment() {
 
 
 //
+        }
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult ?: return
+                val lastLocation: Location = locationResult.lastLocation!!
+
+                mapboxMap.setCamera(
+                    CameraOptions.Builder()
+                        .center(Point.fromLngLat(lastLocation.longitude, lastLocation.latitude))
+                        .zoom(15.0)
+                        .build()
+                )
+            }
         }
 
         viewBinding.mapView.location.apply {
@@ -650,29 +671,107 @@ class DriverFragment : Fragment() {
                     R.drawable.ic_navigation_puck_icon
                 )
             )
-            setLocationProvider(navigationLocationProvider)
+//            setLocationProvider(navigationLocationProvider)
             enabled = true
         }
 
-        viewBinding.recenter.setOnClickListener {
-            navigationCamera.requestNavigationCameraToFollowing()
-            viewBinding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+//        viewBinding.recenter.setOnClickListener {
+//            navigationCamera.requestNavigationCameraToFollowing()
+//            viewBinding.routeOverview.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+//
+//            if (isRouteFetched) {
+//                isRouteFetched = false
+//                if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.ACCEPTED) {
+//                    viewBinding.maneuverView.visibility = View.VISIBLE
+//                }
+//            }
+//        }
+//        viewBinding.routeOverview.setOnClickListener {
+//            navigationCamera.requestNavigationCameraToOverview()
+//            viewBinding.recenter.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+//        }
+//
+//        mapboxNavigation.startTripSession()
 
-            if (isRouteFetched) {
-                isRouteFetched = false
-                if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.ACCEPTED) {
-                    viewBinding.maneuverView.visibility = View.VISIBLE
-                }
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun enableLocationComponent() {
+        Log.d("Mapbox", "Enabling location component")
+
+        val locationRequest = LocationRequest.create().apply {
+            interval = 10000 // 10 seconds
+            fastestInterval = 5000 // 5 seconds
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                locationResult ?: return
+                val lastLocation = locationResult.lastLocation
+                mapboxMap.setCamera(
+                    CameraOptions.Builder()
+                        .center(lastLocation?.longitude?.let {
+                            com.mapbox.geojson.Point.fromLngLat(
+                                it, lastLocation.latitude
+                            )
+                        })
+                        .zoom(15.0)
+                        .build()
+                )
             }
         }
-        viewBinding.routeOverview.setOnClickListener {
-            navigationCamera.requestNavigationCameraToOverview()
-            viewBinding.recenter.showTextAndExtend(BUTTON_ANIMATION_DURATION)
+
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            null /* Looper */
+        )
+    }
+
+    private fun setFinishDialog() {
+        Log.d("dialoguchun", "setFinishDialog: ")
+        val dialog = Dialog(requireContext())
+         homeViewModel.startDrive()
+
+        dialog.setContentView(R.layout.dialog_ask_finish)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window?.setGravity(Gravity.BOTTOM)
+        dialog.window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT
+        )
+        val finishButton: MaterialButton = dialog.findViewById(R.id.button_finish_order)
+        val cancelButton: MaterialButton = dialog.findViewById(R.id.button_cancel_order)
+
+        finishButton.setOnClickListener {
+
+
+            preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.COMPLETED)
+            clearRouteAndStopNavigation()
+            handlerTimer.removeMessages(TIMER_MESSAGE_CODE)
+
+            homeViewModel.stopDrive()
+            viewBinding.parentContainer.keepScreenOn = false
+            dialog.dismiss()
+
+            driverViewModel.completedOrder()
+
+        }
+        cancelButton.setOnClickListener {
+            dialog.dismiss()
+            viewBinding.bottomDialog.swipeButton.isChecked = false
+
         }
 
-        mapboxNavigation.startTripSession()
+        dialog.setOnDismissListener {
+            dialog.dismiss()
+            viewBinding.bottomDialog.swipeButton.isChecked = false
+        }
 
-
+        dialog.show()
     }
 
 
@@ -685,6 +784,16 @@ class DriverFragment : Fragment() {
 
 
     private fun initViewDialog() {
+        viewBinding.addressFromTextViewNavigator.text = preferenceManager.getDestinationAddress()
+        viewBinding.buttonNavigator.setOnClickListener {
+            findRoute(
+                Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude),
+                Point.fromLngLat(
+                    locationDestination.placeLongitude,
+                    locationDestination.placeLatitude
+                )
+            )
+        }
         with(viewBinding.bottomDialog) {
             addressTextViewDialogOnMap.text = preferenceManager.getDestinationAddress()
 
@@ -704,8 +813,8 @@ class DriverFragment : Fragment() {
             passengerComment.text = preferenceManager.getPassengerComment()
 
 
-                val a = PhoneNumberUtil.formatMoneyNumberPlate(preferenceManager.getStartCost().toString())
-            Log.d("narx", "initViewDialog: $a")
+            val a =
+                PhoneNumberUtil.formatMoneyNumberPlate(preferenceManager.getStartCost().toString())
             priceTextViewDialog.text = a
         }
     }
@@ -731,6 +840,7 @@ class DriverFragment : Fragment() {
             DriveAction.ACCEPT -> {
                 Log.d(TAG1, "setBottomSheetSetting: accept")
 
+                viewBinding.buttonNavigator.visibility = View.VISIBLE
                 viewBinding.bottomDialog.timeWorkTextView.visibility = View.GONE
                 viewBinding.bottomDialog.progressTimeTextView.visibility = View.GONE
                 viewBinding.bottomDialog.timeRemainingTextView.visibility = View.VISIBLE
@@ -739,6 +849,7 @@ class DriverFragment : Fragment() {
 //                acquireWakeLock()
 //                homeViewModel.startDrive()
             }
+
             DriveAction.ARRIVED -> {
                 Log.d(TAG1, "setBottomSheetSetting: arrived")
                 startTimer()
@@ -778,12 +889,12 @@ class DriverFragment : Fragment() {
                         "Buyurtma ozgartirildi",
                         Toast.LENGTH_SHORT
                     ).show()
-                    changeDestination(
-                        destination = Point.fromLngLat(
-                            locationDestination2!!.placeLongitude,
-                            locationDestination2!!.placeLatitude
-                        )
-                    )
+//                    changeDestination(
+//                        destination = Point.fromLngLat(
+//                            locationDestination2!!.placeLongitude,
+//                            locationDestination2!!.placeLatitude
+//                        )
+//                    )
                 } else {
                     Toast.makeText(requireContext(), "Ikkinchi manzil yoq", Toast.LENGTH_SHORT)
                         .show()
@@ -798,12 +909,7 @@ class DriverFragment : Fragment() {
             }
 
             DriveAction.COMPLETED -> {
-                preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.COMPLETED)
-                clearRouteAndStopNavigation()
-                handlerTimer.removeMessages(TIMER_MESSAGE_CODE)
 
-                homeViewModel.stopDrive()
-                viewBinding.parentContainer.keepScreenOn = false
 
             }
 
@@ -811,26 +917,29 @@ class DriverFragment : Fragment() {
         }
     }
 
-    private fun setOrderSettingsUi(response: Resource<MainResponse<OrderAccept<UserModel>>>?) {
-        response?.let {
+    private fun setOrderSettingsUi(event: Event<Resource<MainResponse<OrderAccept<UserModel>>>>) {
+        event.getContentIfNotHandled()?.let { response ->
             when (response.state) {
                 ResourceState.SUCCESS -> {
-                    minWaitTime = it.data?.data?.getMinWaitTime()!!
-                    startCost = it.data.data.start_cost
-                    Log.d("narx", "setOrderSettingsUi: ichkarida $startCost ")
+                    minWaitTime = response.data?.data?.getMinWaitTime()!!
+                    startCost = response.data.data.start_cost
                     viewBinding.bottomDialog.priceTextViewDialog.text =
                         PhoneNumberUtil.formatMoneyNumberPlate(startCost.toString())
                     viewBinding.bottomDialog.addressTextViewDialogOnMap.text =
-                        it.data.data.address.from
-                    val orderSettings = it.data.data
+                        response.data.data.address.from
+                    val orderSettings = response.data.data
                     preferenceManager.savePriceSettings(orderSettings)
+
                 }
+
                 ResourceState.ERROR -> {
 
                 }
+
                 ResourceState.LOADING -> {}
             }
         }
+
 
     }
 
@@ -863,6 +972,7 @@ class DriverFragment : Fragment() {
 
                     viewBinding.parentContainer.keepScreenOn = true
                 }
+
                 STARTED -> {
 
 
@@ -881,6 +991,7 @@ class DriverFragment : Fragment() {
                     viewBinding.bottomDialog.timeWorkTextView.visibility = View.VISIBLE
                     viewBinding.parentContainer.keepScreenOn = true
                 }
+
                 PAUSED -> {
                     Alerter.hide()
                     viewBinding.bottomDialog.icPauseStart.setImageDrawable(
@@ -899,6 +1010,7 @@ class DriverFragment : Fragment() {
                     viewBinding.bottomDialog.timeWorkTextView.visibility = View.GONE
                     viewBinding.parentContainer.keepScreenOn = false
                 }
+
                 STOPPED -> {
                     Alerter.hide()
                     viewBinding.bottomDialog.icPauseStart.setImageDrawable(
@@ -915,6 +1027,9 @@ class DriverFragment : Fragment() {
         }
         Log.d(TAG1, "setDashboardStatus: ${dashboardData.getTime()} ")
         var secondsElapsed = 0
+
+
+
 
 
         viewBinding.bottomDialog.timeWorkTextView.text = dashboardData.timeText()
@@ -940,90 +1055,100 @@ class DriverFragment : Fragment() {
 
     }
 
-    private fun changeDestination(destination: Point) {
-        val currentLocation = navigationLocationProvider.lastLocation ?: return
-        val originPoint = Point.fromLngLat(currentLocation.longitude, currentLocation.latitude)
-        findRoute(originPoint, destination)
-    }
+//    private fun changeDestination(destination: Point) {
+//        val currentLocation = navigationLocationProvider.lastLocation ?: return
+//        val originPoint = Point.fromLngLat(currentLocation.longitude, currentLocation.latitude)
+//        findRoute(originPoint, destination)
+//    }
 
     private fun findRoute(origin: Point, destination: Point) {
-        val currentLocation = navigationLocationProvider.lastLocation
-//        val originPoint = originLocation?.let {
-//            Point.fromLngLat(it.longitude, it.latitude)
-//        } ?: return
-        val bearing = currentLocation?.bearing?.toDouble() ?: run {
-            45.0
-        }
+        val uri = Uri.parse("google.navigation:q=${preferenceManager.getDestinationLat()},${preferenceManager.getDestinationLong()}")
 
+        // Create an Intent from uri. Set the action to ACTION_VIEW
+        val mapIntent = Intent(Intent.ACTION_VIEW, uri)
 
-//        40.383054849711264, 71.78235197671702
-        val originPoint =
-            origin ?: Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude)
+        // Make the Intent explicit by setting the Google Maps package
+        mapIntent.setPackage("com.google.android.apps.maps")
 
-
-//        val originPoint =  Point.fromLngLat(71.78235197671702, 40.383054849711264)
-        // execute a route request
-        // it's recommended to use the
-        // applyDefaultNavigationOptions and applyLanguageAndVoiceUnitOptions
-        // that make sure the route request is optimized
-        // to allow for support of all of the Navigation SDK features
-        mapboxNavigation.requestRoutes(
-            RouteOptions.builder()
-                .applyDefaultNavigationOptions()
-                .applyLanguageAndVoiceUnitOptions(requireContext())
-                .coordinatesList(listOf(originPoint, destination))
-
-                // provide the bearing for the origin of the request to ensure
-                // that the returned route faces in the direction of the current user movement
-                .bearingsList(
-                    listOf(
-                        Bearing.builder()
-                            .angle(bearing)
-                            .degrees(45.0)
-                            .build(),
-                        null
-                    )
-                )
-                .layersList(listOf(mapboxNavigation.getZLevel(), null))
-                .build(),
-            object : RouterCallback {
-                override fun onRoutesReady(
-                    routes: List<DirectionsRoute>,
-                    routerOrigin: RouterOrigin
-                ) {
-                    setRouteAndStartNavigation(routes)
-                }
-
-                override fun onFailure(
-                    reasons: List<RouterFailure>,
-                    routeOptions: RouteOptions
-                ) {
-                    // no impl
-                }
-
-                override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
-                    // no impl
-                }
-            }
-        )
+        // Attempt to start an activity that can handle the Intent
+        startActivity(mapIntent)
+//        val currentLocation = navigationLocationProvider.lastLocation
+////        val originPoint = originLocation?.let {
+////            Point.fromLngLat(it.longitude, it.latitude)
+////        } ?: return
+//        val bearing = currentLocation?.bearing?.toDouble() ?: run {
+//            45.0
+//        }
+//
+//
+////        40.383054849711264, 71.78235197671702
+//        val originPoint =
+//            origin ?: Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude)
+//
+//
+////        val originPoint =  Point.fromLngLat(71.78235197671702, 40.383054849711264)
+//        // execute a route request
+//        // it's recommended to use the
+//        // applyDefaultNavigationOptions and applyLanguageAndVoiceUnitOptions
+//        // that make sure the route request is optimized
+//        // to allow for support of all of the Navigation SDK features
+//        mapboxNavigation.requestRoutes(
+//            RouteOptions.builder()
+//                .applyDefaultNavigationOptions()
+//                .applyLanguageAndVoiceUnitOptions(requireContext())
+//                .coordinatesList(listOf(originPoint, destination))
+//
+//                // provide the bearing for the origin of the request to ensure
+//                // that the returned route faces in the direction of the current user movement
+//                .bearingsList(
+//                    listOf(
+//                        Bearing.builder()
+//                            .angle(bearing)
+//                            .degrees(45.0)
+//                            .build(),
+//                        null
+//                    )
+//                )
+//                .layersList(listOf(mapboxNavigation.getZLevel(), null))
+//                .build(),
+//            object : RouterCallback {
+//                override fun onRoutesReady(
+//                    routes: List<DirectionsRoute>,
+//                    routerOrigin: RouterOrigin
+//                ) {
+//                    setRouteAndStartNavigation(routes)
+//                }
+//
+//                override fun onFailure(
+//                    reasons: List<RouterFailure>,
+//                    routeOptions: RouteOptions
+//                ) {
+//                    // no impl
+//                }
+//
+//                override fun onCanceled(routeOptions: RouteOptions, routerOrigin: RouterOrigin) {
+//                    // no impl
+//                }
+//            }
+//        )
     }
 
-    private fun setRouteAndStartNavigation(routes: List<DirectionsRoute>) {
-        // set routes, where the first route in the list is the primary route that
-        // will be used for active guidance
-        mapboxNavigation.setRoutes(routes)
-
-        // start location simulation along the primary route
-        startSimulation(routes.first())
-
-        // show UI elements
-        viewBinding.routeOverview.visibility = View.VISIBLE
-//        viewBinding.tripProgressView.visibility = View.VISIBLE
-
-        // move the camera to overview when new route is available
-        navigationCamera.requestNavigationCameraToOverview()
-        isRouteFetched = true
-    }
+//    private fun setRouteAndStartNavigation(routes: List<DirectionsRoute>) {
+//        // set routes, where the first route in the list is the primary route that
+//        // will be used for active guidance
+//        mapboxNavigation.setRoutes(routes)
+//
+//        // start location simulation along the primary route
+//        startSimulation(routes.first())
+//
+//        // show UI elements
+//        viewBinding.routeOverview.visibility = View.VISIBLE
+////        viewBinding.tripProgressView.visibility = View.VISIBLE
+//
+//        // move the camera to overview when new route is available
+//        navigationCamera.requestNavigationCameraToOverview()
+//        isRouteFetched = true
+//    }
 
 
     private fun startSimulation(route: DirectionsRoute) {
@@ -1042,11 +1167,11 @@ class DriverFragment : Fragment() {
 
 
         // register event listeners
-        mapboxNavigation.registerRoutesObserver(routesObserver)
-        mapboxNavigation.registerRouteProgressObserver(routeProgressObserver)
-        mapboxNavigation.registerLocationObserver(locationObserver)
-//        mapboxNavigation.registerVoiceInstructionsObserver(voiceInstructionsObserver)
-        mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
+//        mapboxNavigation.registerRoutesObserver(routesObserver)
+//        mapboxNavigation.registerRouteProgressObserver(routeProgressObserver)
+//        mapboxNavigation.registerLocationObserver(locationObserver)
+////        mapboxNavigation.registerVoiceInstructionsObserver(voiceInstructionsObserver)
+//        mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
 
 //        if (mapboxNavigation.getRoutes().isEmpty()) {
 //            // if simulation is enabled (ReplayLocationEngine set to NavigationOptions)
@@ -1072,11 +1197,11 @@ class DriverFragment : Fragment() {
 //        if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.COMPLETED) {
 
         // unregister event listeners to prevent leaks or unnecessary resource consumption
-        mapboxNavigation.unregisterRoutesObserver(routesObserver)
-        mapboxNavigation.unregisterRouteProgressObserver(routeProgressObserver)
-        mapboxNavigation.unregisterLocationObserver(locationObserver)
-//        mapboxNavigation.unregisterVoiceInstructionsObserver(voiceInstructionsObserver)
-        mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
+//        mapboxNavigation.unregisterRoutesObserver(routesObserver)
+//        mapboxNavigation.unregisterRouteProgressObserver(routeProgressObserver)
+//        mapboxNavigation.unregisterLocationObserver(locationObserver)
+////        mapboxNavigation.unregisterVoiceInstructionsObserver(voiceInstructionsObserver)
+//        mapboxNavigation.unregisterRouteProgressObserver(replayProgressObserver)
 //        }
     }
 
@@ -1093,24 +1218,27 @@ class DriverFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        requireContext().unregisterReceiver(networkReceiver)
+        context?.unregisterReceiver(networkReceiver)
     }
+
     override fun onDestroy() {
         super.onDestroy()
-        if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.COMPLETED) {
-            MapboxNavigationProvider.destroy()
-            mapboxReplayer.finish()
-            if (::maneuverApi.isInitialized) {
-                maneuverApi.cancel()
-            }
-            if (::routeLineApi.isInitialized) {
-                routeLineApi.cancel()
-            }
-            if (::routeLineApi.isInitialized) {
-                routeLineView.cancel()
-            }
+        locationTracker.stopLocationUpdates()
 
-        }
+//        if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.COMPLETED) {
+//            MapboxNavigationProvider.destroy()
+//            mapboxReplayer.finish()
+//            if (::maneuverApi.isInitialized) {
+//                maneuverApi.cancel()
+//            }
+//            if (::routeLineApi.isInitialized) {
+//                routeLineApi.cancel()
+//            }
+//            if (::routeLineApi.isInitialized) {
+//                routeLineView.cancel()
+//            }
+//
+//        }
         handlerTimer.removeMessages(TIMER_MESSAGE_CODE)
 
 
@@ -1123,9 +1251,10 @@ class DriverFragment : Fragment() {
     }
 
     private fun clearRouteAndStopNavigation() {
+        viewBinding.buttonNavigator.visibility = View.GONE
 
         // clear
-        mapboxNavigation.setRoutes(listOf())
+//        mapboxNavigation.setRoutes(listOf())
 //        mapboxNavigation.setNavigationRoutes(listOf())
 
         // stop simulation
@@ -1136,9 +1265,9 @@ class DriverFragment : Fragment() {
 //        }
 
 
-        // hide UI elements
-        viewBinding.maneuverView.visibility = View.INVISIBLE
-        viewBinding.routeOverview.visibility = View.INVISIBLE
+//        // hide UI elements
+//        viewBinding.maneuverView.visibility = View.INVISIBLE
+//        viewBinding.routeOverview.visibility = View.INVISIBLE
     }
 
 
@@ -1147,14 +1276,24 @@ class DriverFragment : Fragment() {
         response?.let {
             when (it.state) {
                 ResourceState.LOADING -> {
+                    viewBinding.bottomDialog.swipeButton.checkedText =
+                        getString(R.string.downloading)
                 }
+
                 ResourceState.SUCCESS -> {
                     isOrderStarted = true
+                    preferenceManager.saveLastRaceId(-1)
+
 //                    startTimerIfOrderStarted()
                     viewBinding.bottomDialog.swipeButton.isChecked = false
                     driverViewModel.arrivedOrder()
                 }
-                ResourceState.ERROR -> {}
+
+                ResourceState.ERROR -> {
+                    preferenceManager.saveLastRaceId(1)
+                    viewBinding.bottomDialog.swipeButton.isChecked = false
+                    driverViewModel.arrivedOrder()
+                }
             }
         }
 
@@ -1164,6 +1303,8 @@ class DriverFragment : Fragment() {
         response?.let {
             when (response.state) {
                 ResourceState.SUCCESS -> {
+                    preferenceManager.saveLastRaceId(-1)
+
                     viewBinding.bottomDialog.swipeButton.isChecked = false
                     driverViewModel.startedOrder()
                     if (LocationPermissionUtils.isBasicPermissionGranted(requireContext())
@@ -1180,9 +1321,25 @@ class DriverFragment : Fragment() {
                     }
 
                 }
+
                 ResourceState.ERROR -> {
+                    preferenceManager.saveLastRaceId(1)
                     viewBinding.bottomDialog.swipeButton.isChecked = false
+                    driverViewModel.startedOrder()
+                    if (LocationPermissionUtils.isBasicPermissionGranted(requireContext())
+                        && LocationPermissionUtils.isLocationEnabled(requireContext())
+                    ) {
+                        startDrive()
+                    } else {
+                        permissionActivityResultLauncher.launch(
+                            PermissionCheckActivity.getOpenIntent(
+                                context = requireContext(),
+                                isPromptMode = false
+                            )
+                        )
+                    }
                 }
+
                 ResourceState.LOADING -> {
                     viewBinding.bottomDialog.swipeButton.checkedText =
                         getString(R.string.downloading)
@@ -1196,12 +1353,13 @@ class DriverFragment : Fragment() {
         response?.let {
             when (response.state) {
                 ResourceState.SUCCESS -> {
-                    driverViewModel.completedOrder()
 //                    showFinishDialog(it)
                 }
+
                 ResourceState.LOADING -> {
 
                 }
+
                 ResourceState.ERROR -> {
 
 
@@ -1240,6 +1398,20 @@ class DriverFragment : Fragment() {
                 updateUITime(time, state)
             }
         }
+    }
+
+    override fun onLocationChanged(location: Location?) {
+        Log.d("masofa", "onLocationChanged: $location")
+    }
+
+
+    override fun onDistanceChanged(distance: Float) {
+        Log.d("masofa", "onDistanceChanged: $distance")
+        handlerTimer.removeMessages(TIMER_MESSAGE_CODE)
+
+        homeViewModel.startDrive()
+        locationTracker.stopLocationUpdates()
+
     }
 }
 

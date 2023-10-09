@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/parentContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -19,12 +20,6 @@
     </RelativeLayout>
 
 
-    <com.mapbox.navigation.ui.maneuver.view.MapboxManeuverView
-        android:id="@+id/maneuverView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:visibility="invisible" />
 
 
 
@@ -37,6 +32,10 @@
         <include
             android:id="@+id/bottom_dialog"
             layout="@layout/dialog_accept_order" />
+
+        <include
+            android:id="@+id/bottom_dialog_taxometer"
+            layout="@layout/dialog_taxometer" />
     </FrameLayout>
 
 
@@ -56,24 +55,86 @@
             app:backgroundTint="@color/blue"
             app:tint="@color/white"
             android:id="@+id/call_dispetcher"
+            android:layout_marginBottom="@dimen/_10sdp"
             android:layout_gravity="end"
             app:layout_anchor="@id/maneuverView"
             android:layout_height="wrap_content"/>
-        <com.mapbox.navigation.ui.maps.camera.view.MapboxRouteOverviewButton
-            android:id="@+id/routeOverview"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginVertical="@dimen/_5sdp"
-            android:visibility="invisible" />
-
-        <com.mapbox.navigation.ui.maps.camera.view.MapboxRecenterButton
-            android:id="@+id/recenter"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/_10sdp" />
 
     </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:id="@+id/button_navigator"
+        app:cardElevation="@dimen/_3sdp"
+        android:layout_marginHorizontal="@dimen/_3sdp"
+        android:layout_marginTop="@dimen/_3sdp"
+        android:layout_height="@dimen/_80sdp">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:paddingTop="@dimen/_10sdp"
+        android:paddingBottom="@dimen/_5sdp"
+        android:paddingHorizontal="@dimen/_10sdp"
+        android:layout_height="match_parent">
+
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="@dimen/_14sdp"
+            android:layout_height="@dimen/_14sdp"
+            android:alpha=".6"
+            android:src="@drawable/mapbox_ic_circle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_8sdp"
+            android:text="Qayerdan:"
+            android:textColor="@color/text_black_white"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView5"
+            app:layout_constraintStart_toEndOf="@+id/imageView5"
+            app:layout_constraintTop_toTopOf="@+id/imageView5" />
+
+        <TextView
+            android:id="@+id/addressFromTextView_navigator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            android:paddingStart="0dp"
+            android:paddingEnd="@dimen/_7sdp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView4"
+            app:layout_constraintEnd_toStartOf="@+id/textView9"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/imageView4" />
+
+        <ImageView
+            android:id="@+id/imageView4"
+            android:layout_width="@dimen/_25sdp"
+            android:layout_height="@dimen/_25sdp"
+            android:src="@drawable/icon_google_maps"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Navigatsiya"
+            android:textColor="@color/text_black_white"
+            android:textSize="@dimen/_8ssp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imageView4"
+            app:layout_constraintVertical_bias="1" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </com.google.android.material.card.MaterialCardView>
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

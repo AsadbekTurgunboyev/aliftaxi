@@ -295,6 +295,7 @@
                         android:id="@+id/carNumberPlateEditText"
                         android:layout_height="match_parent"
                         android:hint="A 777 AA"
+                        android:textAllCaps="true"
                         android:inputType="textCapCharacters"
                         android:textColorHint="#BAB9B9" />
 
@@ -324,8 +325,10 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:hint="12345ABC"
+                    android:hint="ABC1234567"
                     android:maxLength="15"
+                    android:textAllCaps="true"
+                    android:inputType="textCapCharacters"
                     android:id="@+id/carPassportEdittext"
                     android:textColorHint="#BAB9B9" />
             </com.google.android.material.textfield.TextInputLayout>

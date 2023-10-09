@@ -4,7 +4,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
-import com.example.taxi.R
 import com.google.android.material.navigation.NavigationView
 
 fun addGroupsToNavigationView(

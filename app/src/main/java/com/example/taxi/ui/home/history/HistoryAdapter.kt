@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.recyclerview.widget.RecyclerView
@@ -36,6 +37,10 @@ class HistoryAdapter(val list: List<Ride<RideType, RideAddress, RideUser, RideSt
             binding.addressToTextViewHistory.convertToCyrillic(data.address.to)
             updateTextView(data.type,binding.textViewType)
             updateStatusTextView(data.status,binding.rideStatus)
+
+            itemView.setOnClickListener {
+                Toast.makeText(itemView.context, "${data.id}", Toast.LENGTH_SHORT).show()
+            }
             binding.priceTextView.text = PhoneNumberUtil.formatMoneyNumberPlate(data.cost.toString())
             binding.orderTimeTextView.text = getOrderTime(data.created_at.datetime)
             binding.distanceTextView.text = "${ConversionUtil.getDistanceWithKm(data.distance.toDouble())} ${itemView.context.getString(R.string.km)}"

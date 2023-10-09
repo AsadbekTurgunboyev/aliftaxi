@@ -56,11 +56,13 @@ class CarDataFragment : Fragment() {
         nextChangeEdittext(viewBinding.autoCarFirstNumber) {
             viewBinding.carNumberPlateEditText.requestFocus()
         }
-
-        createCarNumberPlateEditText(viewBinding.carNumberPlateEditText)
+        /**
+         * agar keyinchalik avtomabil uchun qolip boyicha soralsa ushbu koment ochib qo'yiladi
+         */
+//        createCarNumberPlateEditText(viewBinding.carNumberPlateEditText)
 
         /**
-         * agar keyinchalik texpasport qolib boyicha soralsa ushbu koment ochib qo'yiladi
+         * agar keyinchalik texpasport qolip boyicha soralsa ushbu koment ochib qo'yiladi
          */
 //        createCarLicencePlateEdittext(viewBinding.carPassportEdittext)
 

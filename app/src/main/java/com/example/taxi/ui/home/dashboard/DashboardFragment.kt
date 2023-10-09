@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,10 +36,12 @@ import com.example.taxi.domain.model.selfie.SelfieAllData
 import com.example.taxi.domain.model.selfie.StatusModel
 import com.example.taxi.domain.model.settings.SettingsData
 import com.example.taxi.domain.preference.UserPreferenceManager
+import com.example.taxi.network.NetworkReceiver
 import com.example.taxi.socket.SocketMessageProcessor
 import com.example.taxi.socket.SocketRepository
 import com.example.taxi.socket.SocketService
 import com.example.taxi.ui.home.SocketViewModel
+import com.example.taxi.ui.home.driver.DriverViewModel
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.example.taxi.ui.login.LoginActivity
 import com.example.taxi.ui.permission.PermissionCheckActivity
@@ -48,10 +52,12 @@ import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 
+const val TAG = "bekor"
 class DashboardFragment : Fragment() {
 
     private lateinit var viewBinding: FragmentDashboardBinding
     private var isViewCreated = false
+    private lateinit var networkReceiver: NetworkReceiver
 
     val navController by lazy {
         findNavController()
@@ -69,6 +75,7 @@ class DashboardFragment : Fragment() {
 
     private val socketViewModel: SocketViewModel by viewModels()
     private val orderViewModel: OrderViewModel by sharedViewModel()
+    private val driverViewModel: DriverViewModel by sharedViewModel()
     private val dashboardViewModel: DashboardViewModel by viewModel()
     private val userPreferenceManager: UserPreferenceManager by inject()
 
@@ -85,7 +92,12 @@ class DashboardFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireContext().registerReceiver(socketStatusReceiver, IntentFilter("SOCKET_STATUS"))
+        registerSocketStatusReceiver()
+
+    }
+
+    private fun registerSocketStatusReceiver() {
+        context?.registerReceiver(socketStatusReceiver, IntentFilter("SOCKET_STATUS"))
     }
 
     override fun onCreateView(
@@ -94,24 +106,49 @@ class DashboardFragment : Fragment() {
     ): View {
         // Inflate the layout for this fragment
         isViewCreated = true
-         viewBinding = FragmentDashboardBinding.inflate(inflater, container, false)
+        viewBinding = FragmentDashboardBinding.inflate(inflater, container, false)
+
+//        initializeNetworkReceiver()
 
 
         setToggleButtonUi(userPreferenceManager.getToggleState())
-
-//        if (userPreferenceManager.getToggleState()){
-//            userPreferenceManager.getToken()?.let { socketRepository.initSocket(it) }
-//        }
-//        socketViewModel.isConnected.observe(viewLifecycleOwner) { isConnected ->
-//            updateSocket(
-//                isConnected
-//            )
-//        }
 
         return viewBinding.root
 
     }
 
+    private fun initializeNetworkReceiver() {
+        networkReceiver = NetworkReceiver { isConnected ->
+            if (isConnected) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    checkAndCompleteOrderLostNetwork()
+                }
+            }
+        }
+        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        context?.registerReceiver(networkReceiver, filter)
+    }
+
+
+    private fun checkAndCompleteOrderLostNetwork() {
+        if (userPreferenceManager.getLastRaceId() == 1) {
+            view?.let {
+                try {
+                    if (findNavController().currentDestination?.id == R.id.dashboardFragment) {
+                        // DashboardFragment is the current fragment
+                        Log.d(TAG, "checkAndCompleteOrderLostNetwork: bu dashboard")
+                        driverViewModel.completeOrderLostNetwork(
+                            userPreferenceManager.getLastRace()
+                        )
+                    } else {
+                        // DashboardFragment is not the current fragment
+                    }
+                } catch (e: Exception) {
+
+                }
+            }
+        }
+    }
 
     @SuppressLint("InflateParams", "SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -157,6 +194,12 @@ class DashboardFragment : Fragment() {
                     navController.navigate(R.id.choosingLanguageFragment)
                     true
                 }
+
+                // 233 -> id taximeter layout
+                233 -> {
+                    navController.navigate(R.id.taximeterFragment)
+                    true
+                }
                 // 987 -> id about us layout
                 987 -> {
                     navController.navigate(R.id.aboutFragment)
@@ -182,6 +225,7 @@ class DashboardFragment : Fragment() {
                     }
                     true
                 }
+
                 else -> {
                     true
                 }
@@ -209,19 +253,36 @@ class DashboardFragment : Fragment() {
 
     private fun getAllData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            dashboardViewModel.getBalance()
-            dashboardViewModel.getSettings()
-            dashboardViewModel.getDriverData()
-            orderViewModel.getOrders()
+            try {
+                Log.d(TAG, "getAllData: Started")
+                getDashboardData()
+                getOrderData()
+                checkAndCompleteOrderLostNetwork()
 
+            } catch (e: Exception) {
+                Log.e(TAG, "getAllData: Error occurred", e)
+                // Consider showing a message to the user to inform them about the error
+            }
         }
+    }
+
+    private fun getDashboardData() {
+        dashboardViewModel.getBalance()
+        dashboardViewModel.getSettings()
+        dashboardViewModel.getDriverData()
+    }
+    private fun getOrderData() {
+        orderViewModel.getOrders()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         isViewCreated = false
+        Log.d(TAG, "onDestroyView: ")
+//        context?.unregisterReceiver(networkReceiver)
 //        disposable.dispose()  // Dispose the observer to prevent memory leaks
     }
+
     private fun connectToSocket() {
         initSocket()
     }
@@ -229,9 +290,10 @@ class DashboardFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
+        Log.d(TAG, "onStop: ")
+//        context?.unregisterReceiver(networkReceiver)
         lifecycleScope.cancel()
     }
-
 
 
     private fun initSocket() {
@@ -259,7 +321,7 @@ class DashboardFragment : Fragment() {
                 ResourceState.SUCCESS -> {
                     resource.data?.data?.let { data ->
                         viewBinding.navigationView.getHeaderView(0).apply {
-                            setTextViews(data,this)
+                            setTextViews(data, this)
                             userPreferenceManager.saveDriverAllData(data)
                             findViewById<ImageView>(R.id.circleImageView)?.let { imageView ->
                                 Glide.with(requireActivity())
@@ -278,26 +340,34 @@ class DashboardFragment : Fragment() {
                             findViewById<LinearLayout>(R.id.active_status_shape)?.backgroundTintList =
                                 ColorStateList.valueOf(Color.parseColor(color))
 
-                            viewBinding.menuError.visibility = if (data.status.int == 10) View.GONE else View.VISIBLE
+                            viewBinding.menuError.visibility =
+                                if (data.status.int == 10) View.GONE else View.VISIBLE
 
 
                         }
                     }
                 }
+
                 ResourceState.LOADING -> {
                     // Show loading state
                 }
+
                 ResourceState.ERROR -> {
-                    if (resource.message == "401"){
+                    if (resource.message == "401") {
                         userPreferenceManager.clear()
-                        Toast.makeText(requireContext(), getString(R.string.not_found_driver), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.not_found_driver),
+                            Toast.LENGTH_SHORT
+                        ).show()
                         // Then start the new activity
                         val intent = Intent(requireContext(), LoginActivity::class.java)
                         // Clear all the previous activities from the stack
                         intent.flags =
                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
-                    }else{}
+                    } else {
+                    }
                     // Handle the error
                 }
             }
@@ -314,9 +384,11 @@ class DashboardFragment : Fragment() {
                 ResourceState.LOADING -> {
                     // Show loading state
                 }
+
                 ResourceState.SUCCESS -> {
 
                 }
+
                 ResourceState.ERROR -> {
 //                    val errorMessage = resource.message
                     // Handle the error
@@ -325,6 +397,36 @@ class DashboardFragment : Fragment() {
         }
 
     }
+
+    private fun completeOrderUi(data: Resource<MainResponse<Any>>?) {
+        when (data?.state) {
+            ResourceState.LOADING -> {
+                viewBinding.buttonOrder.isEnabled = false
+
+            }
+
+            ResourceState.SUCCESS -> {
+                userPreferenceManager.saveLastRaceId(-1)
+                viewBinding.buttonOrder.isEnabled = true
+
+            }
+
+            ResourceState.ERROR -> {
+                Log.d(TAG, "completeOrderUi: ${data.message}")
+                Toast.makeText(context, "${data.message}", Toast.LENGTH_SHORT).show()
+                if (data.message == "400") {
+                    userPreferenceManager.saveLastRaceId(-1)
+                    viewBinding.buttonOrder.isEnabled = true
+                } else {
+                    userPreferenceManager.saveLastRaceId(1)
+                    viewBinding.buttonOrder.isEnabled = false
+                }
+            }
+
+            else -> {}
+        }
+    }
+
 
     private fun updateUi(resource: Resource<MainResponse<BalanceData>>?) {
         resource?.let {
@@ -336,11 +438,13 @@ class DashboardFragment : Fragment() {
                 ResourceState.ERROR -> {
 
                 }
+
                 ResourceState.SUCCESS -> {
                     viewBinding.refresh.isRefreshing = false
 
                     viewLifecycleOwner.lifecycleScope.launch {
-                        viewBinding.totalBalanceTxt.text = PhoneNumberUtil.formatMoneyNumberPlate(it.data?.data?.total.toString())
+                        viewBinding.totalBalanceTxt.text =
+                            PhoneNumberUtil.formatMoneyNumberPlate(it.data?.data?.total.toString())
                         stopBalanceLoading()
 
                     }
@@ -441,6 +545,9 @@ class DashboardFragment : Fragment() {
 ////            updateSocket(isConnected)
 //        }
 
+        driverViewModel.completeOrderLostNetwork.observe(viewLifecycleOwner) {
+            completeOrderUi(it)
+        }
         dashboardViewModel.balanceResponse.observe(viewLifecycleOwner) { resource ->
             updateUi(resource)
         }
@@ -472,7 +579,9 @@ class DashboardFragment : Fragment() {
             0
         ).versionName
         viewBinding.tvVersionName.text = "v$appVersion"
-        viewBinding.buttonOrder.isEnabled = userPreferenceManager.getToggleState()
+        if (userPreferenceManager.getLastRaceId() == -1){
+            viewBinding.buttonOrder.isEnabled = userPreferenceManager.getToggleState()
+        }
 
 
         val widthOfNav = (ScreenUtils.width) * 0.8
@@ -501,10 +610,9 @@ class DashboardFragment : Fragment() {
 
         viewBinding.buttonExit.setOnClickListener {
 
-            if (userPreferenceManager.getToggleState()){
+            if (userPreferenceManager.getToggleState()) {
                 DialogUtils.showIsSocketConnect(requireContext())
-            }else
-            {
+            } else {
                 exitApp()
             }
 
@@ -516,7 +624,7 @@ class DashboardFragment : Fragment() {
         }
 
         viewBinding.callBtn.setOnClickListener {
-              ButtonUtils.callToDispatcher(requireContext())
+            ButtonUtils.callToDispatcher(requireContext())
         }
 
         viewBinding.buttonOrder.setOnClickListener {
@@ -542,7 +650,10 @@ class DashboardFragment : Fragment() {
                 putExtra("IS_READY_FOR_WORK", isOn)
             }
             setToggleButtonUi(isOn)
-            viewBinding.buttonOrder.isEnabled = isOn
+            if (userPreferenceManager.getLastRaceId() == -1){
+
+                viewBinding.buttonOrder.isEnabled = isOn
+            }
 
             if (isOn) {
 
@@ -566,12 +677,12 @@ class DashboardFragment : Fragment() {
     }
 
     private fun setToggleButtonUi(on: Boolean) {
-        if (on){
+        if (on) {
             viewBinding.isReadyForWork.isOn = true
             viewBinding.isReadyForWork.colorBorder = requireActivity().getColor(R.color.blue)
             viewBinding.isReadyForWork.colorOn = requireActivity().getColor(R.color.blue)
 
-        }else{
+        } else {
             viewBinding.isReadyForWork.isOn = false
             viewBinding.isReadyForWork.colorBorder = requireActivity().getColor(R.color.grey)
             viewBinding.isReadyForWork.colorOn = requireActivity().getColor(R.color.grey)

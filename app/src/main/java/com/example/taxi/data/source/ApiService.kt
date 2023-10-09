@@ -4,6 +4,7 @@ import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
 import com.example.taxi.domain.model.balance.BalanceData
+import com.example.taxi.domain.model.checkAccess.AccessModel
 import com.example.taxi.domain.model.history.*
 import com.example.taxi.domain.model.location.LocationRequest
 import com.example.taxi.domain.model.order.*
@@ -56,13 +57,16 @@ interface ApiService {
     @POST("driver/fill-selfie")
     fun fillSelfie(
         @Part selfie: MultipartBody.Part, @Part licensePhoto: MultipartBody.Part
-    ): Observable<MainResponse<SelfieAllData<IsCompletedModel,StatusModel>>>
+    ): Observable<MainResponse<SelfieAllData<IsCompletedModel, StatusModel>>>
 
     @GET("mode/index")
     fun getModes(): Observable<ModeResponse>
 
+    @POST("settings/check-access")
+    fun checkAccess(@Body request: AccessModel): Observable<MainResponse<Any>>
+
     @GET("driver/me")
-    fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel,StatusModel>>>
+    fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel, StatusModel>>>
 
     @GET("balance/total")
     fun getBalance(): Observable<MainResponse<BalanceData>>
@@ -85,6 +89,9 @@ interface ApiService {
     @POST("order/accept")
     fun orderAccept(@Query("id") id: Int): Observable<MainResponse<OrderAccept<UserModel>>>
 
+    @POST("order/taximeter")
+    fun orderWithTaximeter(): Observable<MainResponse<OrderAccept<UserModel>>>
+
     @POST("order/arrived")
     fun arrivedOrder(): Observable<MainResponse<Any>>
 
@@ -93,6 +100,9 @@ interface ApiService {
 
     @POST("order/completed")
     fun completeOrder(@Body request: OrderCompleteRequest): Observable<MainResponse<Any>>
+
+    @POST("order/tugadi")
+    fun completeOrderNoNetwork(@Body request: OrderCompleteRequest): Observable<MainResponse<Any>>
 
     @GET("order/history")
     fun getHistory(
@@ -126,5 +136,5 @@ interface ApiService {
     fun getFAQ(): Observable<MainResponse<ResponseAbout>>
 
     @GET("order/current")
-     fun getOrderCurrent() : Observable<MainResponse<Any>>
+    fun getOrderCurrent(): Observable<MainResponse<Any>>
 }

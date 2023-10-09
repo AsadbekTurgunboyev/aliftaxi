@@ -3,8 +3,6 @@ package com.example.taxi.network
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.taxi.domain.exception.traceErrorException
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.usecase.main.GetMainResponseUseCase
 import com.example.taxi.utils.Resource
@@ -12,7 +10,6 @@ import com.example.taxi.utils.ResourceState
 import com.google.gson.Gson
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
 const val IS_CONNECT = "isConnect"

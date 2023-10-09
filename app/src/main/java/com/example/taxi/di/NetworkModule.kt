@@ -1,7 +1,6 @@
 package com.example.taxi.di
 
 import android.content.Context
-import android.util.Log
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.example.taxi.data.repository.RegisterRepositoryImpl
 import com.example.taxi.data.source.ApiService
@@ -10,8 +9,6 @@ import com.example.taxi.domain.repository.RegisterRepository
 import com.example.taxi.domain.usecase.register.GetRegisterResponseUseCase
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
@@ -19,12 +16,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 
 
 private const val TIME_OUT = 30L

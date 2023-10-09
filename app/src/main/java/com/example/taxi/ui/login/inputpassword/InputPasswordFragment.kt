@@ -16,10 +16,8 @@ import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
-import com.chaos.view.PinView
 import com.example.taxi.R
 import com.example.taxi.components.service.SmsReceiver.Companion.ACTION_OTP_RECEIVED
 import com.example.taxi.components.service.SmsReceiver.Companion.EXTRA_OTP_CODE
@@ -33,11 +31,6 @@ import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.ui.home.HomeActivity
 import com.example.taxi.utils.*
 import com.google.android.gms.auth.api.phone.SmsRetriever
-import com.google.android.gms.common.api.CommonStatusCodes
-import com.google.android.gms.common.api.Status
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
-import com.google.android.gms.tasks.Task
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.regex.Pattern

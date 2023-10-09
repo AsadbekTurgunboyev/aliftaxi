@@ -65,4 +65,9 @@
         android:id="@+id/FAQFragment"
         android:name="com.example.taxi.ui.home.menu.faq.FAQFragment"
         android:label="FAQFragment" />
+    <fragment
+        android:id="@+id/taximeterFragment"
+        android:name="com.example.taxi.ui.taxometer.TaximeterFragment"
+        android:label="fragment_taximeter"
+        tools:layout="@layout/fragment_taximeter" />
 </navigation>

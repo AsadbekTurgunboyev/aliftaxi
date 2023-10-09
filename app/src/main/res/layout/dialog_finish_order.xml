@@ -127,6 +127,7 @@
                     android:textColor="@color/text_black_white"
                     android:textStyle="bold" />
             </LinearLayout>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -183,7 +184,7 @@
     </FrameLayout>
 
 
-    <com.google.android.material.button.MaterialButton
+    <com.github.leandroborgesferreira.loadingbutton.customViews.CircularProgressButton
         android:id="@+id/finish_button_dialog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -192,9 +193,14 @@
         android:backgroundTint="@color/yellow"
         android:paddingVertical="@dimen/_10sdp"
         android:text="@string/exit"
+        android:layout_gravity="center"
+        android:gravity="center"
         android:textAllCaps="false"
         android:textColor="@color/black"
-        app:cornerRadius="@dimen/_10sdp" />
+        app:cornerRadius="@dimen/_10sdp"
+        app:spinning_bar_color="#FFF"
+        app:spinning_bar_padding="6dp"
+        app:spinning_bar_width="4dp" />
 
 
 </LinearLayout>

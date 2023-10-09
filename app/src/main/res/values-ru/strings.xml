@@ -163,6 +163,19 @@
     <string name="qayta_urinish">Попробовать снова</string>
     <string name="bloklangan_raqam">Заблокированный номер!</string>
     <string name="you_are_connect_to_socket">Вы сейчас на работе. Для выхода необходимо отключить \'Работе режим\'!</string>
+
+
+    <string name="yo_lkira_haqqi">Стоимость проезда</string>
+    <string name="hisoblagich_bo_yicha_yo_lkira_haqqi_safar_oxiridagi_yo_lkira_haqidan_biroz_farq_qilishi_mumkin">Стоимость проезда по счетчику может незначительно отличаться от стоимости в конце поездки.</string>
+    <string name="cannot_connect_to_server">Ошибка при подключении к серверу!</string>
+    <string name="no_internet">Нет подключения к интернету</string>
+    <string name="unknow_error">Произошла неожиданная ошибка</string>
+    <string name="buyurtmani_rostdan_ham_yakunlamoqchimisiz">Вы действительно хотите завершить заказ?</string>
+    <string name="buyurtmani_yakunlaganingizdan_so_ng_u_yakunlangan_buyurtmalar_safiga_qo_shiladi_va_u_haqidagi_ma_lumotlarni_tarix_bo_limidan_topishingiz_mumkin_bo_ladi">После завершения вашего заказа, он будет добавлен в список завершенных заказов, и вы сможете найти информацию о нем в разделе \'История\'.</string>
+    <string name="yakunlash">Завершить</string>
+    <string name="taximeter">Taxometer</string>
+
+
     <string-array name="month_names">
         <item>Январь</item>
         <item>Февраль</item>

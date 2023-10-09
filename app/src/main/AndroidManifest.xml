@@ -2,16 +2,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
-    <uses-permission android:name="android.permission.READ_SMS"/>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
@@ -25,6 +29,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Taxi"
         tools:targetApi="31">
+
+        <activity
+            android:name=".ui.update.UpdateActivity"
+            android:exported="true" />
         <activity
             android:name=".ui.permission.PermissionCheckActivity"
             android:exported="false" />
@@ -34,17 +42,14 @@
         <activity
             android:name=".ui.home.HomeActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout"
+            android:exported="true"
             android:hardwareAccelerated="true"
-            android:supportsPictureInPicture="true"
-            android:screenOrientation="portrait"
-
             android:launchMode="singleTask"
-            android:exported="true">
-
-        </activity>
+            android:screenOrientation="portrait"
+            android:supportsPictureInPicture="true" />
         <activity
             android:name=".ui.splash.PrivacyCheckActivity"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -64,21 +69,22 @@
             android:enabled="true"
             android:foregroundServiceType="location"
             android:stopWithTask="false" />
-
-        <service android:name=".components.service.KillStateDialogService"
+        <service
+            android:name=".components.service.KillStateDialogService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
         <service
             android:name=".socket.SocketService"
             android:enabled="true"
             android:exported="false" />
 
-        <receiver android:name=".components.service.SmsReceiver" android:exported="true">
+        <receiver
+            android:name=".components.service.SmsReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.gms.auth.api.phone.SMS_RETRIEVE" />
             </intent-filter>
         </receiver>
     </application>
-
 
 </manifest>

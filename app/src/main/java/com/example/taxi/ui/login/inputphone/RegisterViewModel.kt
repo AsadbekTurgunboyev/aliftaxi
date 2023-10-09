@@ -11,11 +11,9 @@ import com.example.taxi.domain.model.register.RegisterRequest
 import com.example.taxi.domain.usecase.register.GetRegisterResponseUseCase
 import com.example.taxi.utils.Resource
 import com.example.taxi.utils.ResourceState
-import com.google.gson.Gson
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
 class RegisterViewModel(private val getRegisterResponseUseCase: GetRegisterResponseUseCase) :
     ViewModel() {

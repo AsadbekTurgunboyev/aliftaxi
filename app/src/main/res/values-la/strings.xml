@@ -162,7 +162,19 @@
     <string name="qayta_urinish">Qayta urinish</string>
     <string name="bloklangan_raqam">Bloklangan raqam!</string>
 
+
+
+    <string name="yo_lkira_haqqi">Yo\'lkira haqqi</string>
+    <string name="hisoblagich_bo_yicha_yo_lkira_haqqi_safar_oxiridagi_yo_lkira_haqidan_biroz_farq_qilishi_mumkin">Hisoblagich bo\'yicha yo\'lkira haqqi safar oxiridagi yo\'lkira haqidan biroz farq qilishi mumkin.</string>
+    <string name="cannot_connect_to_server">Serverga ulanishda xatolik!</string>
+    <string name="no_internet">Internetga ulanish yo\'q</string>
+    <string name="unknow_error">Kutilmagan xatolik yuz berdi</string>
+    <string name="buyurtmani_rostdan_ham_yakunlamoqchimisiz">Buyurtmani rostdan ham yakunlamoqchimisiz?</string>
+    <string name="buyurtmani_yakunlaganingizdan_so_ng_u_yakunlangan_buyurtmalar_safiga_qo_shiladi_va_u_haqidagi_ma_lumotlarni_tarix_bo_limidan_topishingiz_mumkin_bo_ladi">Buyurtmani yakunlaganingizdan so\'ng u yakunlangan buyurtmalar safiga qo\'shiladi va u haqidagi ma\'lumotlarni Tarix bo\'limidan topishingiz mumkin bo\'ladi</string>
+    <string name="yakunlash">Yakunlash</string>
+
     <string name="km">km</string>
+    <string name="taximeter">Taxometer</string>
     <string-array name="month_names">
         <item>Yanvar</item>
         <item>Fevral</item>

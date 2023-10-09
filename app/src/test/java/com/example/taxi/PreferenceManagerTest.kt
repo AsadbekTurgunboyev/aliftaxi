@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import com.example.taxi.domain.preference.UserPreferenceManager
-import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.mockito.Mockito.*
 

@@ -84,7 +84,7 @@
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:letterSpacing="0"
-                android:maxLines="1"
+                android:maxLines="2"
                 android:paddingStart="@dimen/_10sdp"
                 android:paddingEnd="@dimen/_10sdp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />

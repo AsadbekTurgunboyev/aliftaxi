@@ -1,7 +1,6 @@
 package com.example.taxi.ui.home.tarif
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taxi.R
 import com.example.taxi.domain.model.tarif.Mode
-import com.example.taxi.utils.PhoneNumberUtil
 import com.example.taxi.utils.convertToCyrillic
 import kotlinx.coroutines.launch
 

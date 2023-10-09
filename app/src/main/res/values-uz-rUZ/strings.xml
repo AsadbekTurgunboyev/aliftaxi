@@ -163,6 +163,20 @@
     <string name="qo_n_g_iroq_qilish">Қўнғироқ қилиш</string>
     <string name="qayta_urinish">Қайта уриниш</string>
     <string name="bloklangan_raqam">Блокланган рақам!</string>
+
+
+
+    <string name="yo_lkira_haqqi">Ёлкира ҳакки</string>
+    <string name="hisoblagich_bo_yicha_yo_lkira_haqqi_safar_oxiridagi_yo_lkira_haqidan_biroz_farq_qilishi_mumkin">Ҳисоблагич бўйича ёлкира ҳакки сафар охиридаги ёлкира ҳакидан бироз фарқ қилиши мумкин.</string>
+    <string name="cannot_connect_to_server">Серверга уланишда хатолик!</string>
+    <string name="no_internet">Интернетга уланиш йўқ</string>
+    <string name="unknow_error">Кутилмаган хатолик юз берди</string>
+    <string name="buyurtmani_rostdan_ham_yakunlamoqchimisiz">Буюртмани ростдан ҳам якунламоқчимисиз?</string>
+    <string name="buyurtmani_yakunlaganingizdan_so_ng_u_yakunlangan_buyurtmalar_safiga_qo_shiladi_va_u_haqidagi_ma_lumotlarni_tarix_bo_limidan_topishingiz_mumkin_bo_ladi">Буюртмани якунлаганингиздан сўнг у якунланган буюртмалар сафига қўшилади ва у ҳақидаги маълумотларни Тарих бўлимидан топишингиз мумкин бўлади</string>
+    <string name="yakunlash">Якунлаш</string>
+    <string name="taximeter">Taxometer</string>
+
+
     <string-array name="month_names">
         <item>Январ</item>
         <item>Феврал</item>

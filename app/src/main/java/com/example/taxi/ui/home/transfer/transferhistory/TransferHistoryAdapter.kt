@@ -3,7 +3,6 @@ package com.example.taxi.ui.home.transfer.transferhistory
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.text.method.ScrollingMovementMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup

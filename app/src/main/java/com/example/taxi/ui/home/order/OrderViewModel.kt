@@ -1,7 +1,13 @@
 package com.example.taxi.ui.home.order
 
 import android.util.Log
-import androidx.lifecycle.*
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.taxi.R
 import com.example.taxi.domain.exception.traceErrorException
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.location.LocationRequest
@@ -10,17 +16,23 @@ import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.OrderData
 import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.usecase.main.GetMainResponseUseCase
+import com.example.taxi.utils.Event
 import com.example.taxi.utils.Resource
 import com.example.taxi.utils.ResourceState
 import com.google.gson.Gson
+import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase) : ViewModel() {
 
     val compositeDisposable = CompositeDisposable()
+    private val ackSubject = PublishSubject.create<Boolean>()
 //    private var _orderResponse = MutableLiveData<Resource<MainResponse<List<OrderData<Address>>>>>()
 
     private var _orderItems = MutableLiveData<OrderData<Address>>()
@@ -28,12 +40,14 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
     public var isNewOrder = MutableLiveData<Boolean>().apply {
         value = false
     }
-    public fun clearNewOrder(){
+
+    public fun clearNewOrder() {
         isNewOrder.value = false
     }
 
-    private var _acceptedOrder = MutableLiveData<Resource<MainResponse<OrderAccept<UserModel>>>>()
-    val acceptOrder: LiveData<Resource<MainResponse<OrderAccept<UserModel>>>> get() = _acceptedOrder
+    private var _acceptedOrder =
+        MutableLiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>>()
+    val acceptOrder: LiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>> get() = _acceptedOrder
 
     private var _ordersCount = MutableLiveData<Int>().apply {
         value = 0
@@ -43,13 +57,15 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
 
     val orderResponse: LiveData<Resource<MainResponse<List<OrderData<Address>>>>>
         get() = _orderResponse
-    private var _serverOrderResponse = MutableLiveData<Resource<MainResponse<List<OrderData<Address>>>>>()
+    private var _serverOrderResponse =
+        MutableLiveData<Resource<MainResponse<List<OrderData<Address>>>>>()
 
     fun addItem(orderItem: OrderData<Address>) {
         Log.d("itemuchun", "addItem: $orderItem")
         _orderItems.postValue(orderItem)
 //        _orderItems.value = orderItem
     }
+
     fun removeItem(orderId: Int) {
         Log.d("itemuchun", "removeItem: $orderId")
         val existingResponse = _serverOrderResponse.value
@@ -67,40 +83,45 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
         }
     }
 
-    private var _orderResponse = MediatorLiveData<Resource<MainResponse<List<OrderData<Address>>>>>().apply {
-        addSource(_orderItems) { newItem ->
-            val existingResponse = _serverOrderResponse.value
-            if (existingResponse != null && existingResponse.state == ResourceState.SUCCESS) {
-                val currentData = existingResponse.data?.data?.toMutableList()
-                if (currentData != null) {
-                    isNewOrder.value = true
-                    currentData.add(0, newItem) // add newItem at position 0
-                    val newData = existingResponse.data
-                    newData.data = currentData
-                    this.value = Resource(ResourceState.SUCCESS, newData)
+    private var _orderResponse =
+        MediatorLiveData<Resource<MainResponse<List<OrderData<Address>>>>>().apply {
+            addSource(_orderItems) { newItem ->
+                val existingResponse = _serverOrderResponse.value
+                if (existingResponse != null && existingResponse.state == ResourceState.SUCCESS) {
+                    val currentData = existingResponse.data?.data?.toMutableList()
+                    if (currentData != null) {
+                        isNewOrder.value = true
+                        currentData.add(0, newItem) // add newItem at position 0
+                        val newData = existingResponse.data
+                        newData.data = currentData
+                        this.value = Resource(ResourceState.SUCCESS, newData)
+                    }
                 }
             }
-        }
-        addSource(_serverOrderResponse) { newResponse ->
-            Log.d("orderuchun", "addsource: ${newResponse.data}")
+            addSource(_serverOrderResponse) { newResponse ->
+                Log.d("orderuchun", "addsource: ${newResponse.data}")
 
-            this.value = newResponse
-            isNewOrder.value = false
+                this.value = newResponse
+                isNewOrder.value = false
+            }
         }
+
+
+    fun waitForAck(): Single<Boolean> {
+        return ackSubject.firstOrError().timeout(15, TimeUnit.SECONDS)
     }
-
 
     fun sendLocation(request: LocationRequest) {
         compositeDisposable.add(
             getMainResponseUseCase.sendLocation(request = request)
-
+                .timeout(10, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .doOnSubscribe {}
                 .doOnTerminate {}
                 .subscribe({
-
+                    ackSubject.onNext(true)
                 }, { error ->
-
+                    ackSubject.onNext(false)
                     val errorMessage = if (error is HttpException) {
                         try {
                             val errorBody = error.response()?.errorBody()?.string()
@@ -118,36 +139,35 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
     }
 
     fun acceptOrder(id: Int) {
-        _acceptedOrder.postValue(Resource(ResourceState.LOADING))
+        _acceptedOrder.postValue(Event(Resource(ResourceState.LOADING)))
         compositeDisposable.add(
             getMainResponseUseCase.acceptOrder(id = id)
+                .timeout(10, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .doOnSubscribe {}
                 .doOnTerminate {}
                 .subscribe({ response ->
-                    Log.d("orderuchun", "accept: ${response.data}")
-
-                    _acceptedOrder.postValue(Resource(ResourceState.SUCCESS, response))
-
-                    }, { error ->
-
-                    Log.d("xatolikni", "acceptOrder: $error) ${error.message}")
-                    val errorMessage = if (error is HttpException) {
-                        try {
-                            val errorBody = error.response()?.errorBody()?.string()
-                            val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
-                            mainResponse.message
-                        } catch (e: Exception) {
-                            "An error occurred"
+                    _acceptedOrder.postValue(Event(Resource(ResourceState.SUCCESS, response)))
+                }, { error ->
+                    val errorMessage = when (error) {
+                        is HttpException -> {
+                            try {
+                                val errorBody = error.response()?.errorBody()?.string()
+                                val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                                mainResponse.message
+                            } catch (e: Exception) {
+                                R.string.cannot_connect_to_server
+                            }
                         }
-                    } else {
-                        "An error occurred"
+                        is IOException -> R.string.no_internet
+                        else -> R.string.unknow_error
                     }
-
                     _acceptedOrder.postValue(
-                        Resource(
-                            ResourceState.ERROR,
-                            message = errorMessage
+                        Event(
+                            Resource(
+                                ResourceState.ERROR,
+                                message = errorMessage.toString()
+                            )
                         )
                     )
 
@@ -170,9 +190,13 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
                 .subscribe(
                     { response ->
                         viewModelScope.launch {
-                            Log.d("orderviewmodel", "getOrders: $response")
                             _ordersCount.postValue(response.data.size)
-                            _serverOrderResponse.postValue(Resource(ResourceState.SUCCESS, response))
+                            _serverOrderResponse.postValue(
+                                Resource(
+                                    ResourceState.SUCCESS,
+                                    response
+                                )
+                            )
                         }
 
                     },
@@ -188,8 +212,8 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
         )
     }
 
-    fun clearAcceptOrderData(){
-        _acceptedOrder = MutableLiveData()
+    fun clearAcceptOrderData() {
+
     }
 
     fun clearViewModelData() {

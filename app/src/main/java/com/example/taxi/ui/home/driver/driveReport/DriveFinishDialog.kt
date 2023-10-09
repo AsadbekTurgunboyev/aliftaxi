@@ -5,11 +5,9 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.DialogFragment
 import com.example.taxi.R
-import com.example.taxi.custom.textview.Titanic
 import com.example.taxi.databinding.DialogFinishOrderBinding
 import com.example.taxi.domain.location.LocationPoint
 import com.example.taxi.domain.model.MainResponse
@@ -62,19 +60,20 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.getDrivePath().observe(viewLifecycleOwner){
+        viewModel.getDrivePath().observe(viewLifecycleOwner) {
             setData(it)
         }
         viewModel.getDriveAnalyticsLiveData().observe(viewLifecycleOwner) {
             renderAnalyticsReportData(it)
         }
 
-        driverViewModel.completeOrder.observe(viewLifecycleOwner) { resource ->
-            completeUi(resource)
-
-        }
+//        driverViewModel.completeOrder.observe(viewLifecycleOwner) { resource ->
+//            completeUi(resource)
+//
+//        }
 
     }
+
     private fun totalPathDistance(points: List<LocationPoint>): Double {
         var totalDistance = 0.0
         for (i in 0 until points.size - 1) {
@@ -87,34 +86,15 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
     private fun setData(locationPoints: List<LocationPoint>?) {
 
         val centralPoint = preferenceManager.getCentralLocationPoint()
-        val minDistanceInMeters = preferenceManager.getCenterRadius()?.toInt()?: 0
+        val minDistanceInMeters = preferenceManager.getCenterRadius()?.toInt() ?: 0
 
-        if (centralPoint !=null){
-            val farPoints = locationPoints?.let { pointsWithinDistance(it, centralPoint, minDistanceInMeters) }
+        if (centralPoint != null) {
+            val farPoints =
+                locationPoints?.let { pointsWithinDistance(it, centralPoint, minDistanceInMeters) }
             farCenterDistance = farPoints?.let { totalPathDistance(it) }!!
         }
     }
 
-    private fun completeUi(resource: Resource<MainResponse<Any>>?) {
-        resource?.let {
-            when (it.state) {
-                ResourceState.LOADING -> {
-
-
-                }
-                ResourceState.SUCCESS -> {
-
-                    driverViewModel.completedOrder()
-
-
-                }
-                ResourceState.ERROR -> {
-
-
-                }
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,7 +110,8 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
     private fun renderAnalyticsReportData(driveAnalyticsData: DriveAnalyticsData) {
 
         val costPerKm: Int = preferenceManager.getCostPerKm() // Suppose it returns Int
-        val totalDistance: Double = driveAnalyticsData.getTotalDistanceAsDouble() // Suppose it returns Double
+        val totalDistance: Double =
+            driveAnalyticsData.getTotalDistanceAsDouble() // Suppose it returns Double
         val minDistance = driveAnalyticsData.getMinDistanceAsKm(preferenceManager.getMinDistance())
 
         Log.d(TAG, "renderAnalyticsReportData: totalDistance $totalDistance")
@@ -138,22 +119,36 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         Log.d(TAG, "renderAnalyticsReportData: minimal masofa $minDistance")
         val isDistance = totalDistance - (farCenterDistance / 1000.0)
         var totalInCenterDistance = 0.0
-        if (isDistance > minDistance){
-           totalInCenterDistance = isDistance - (minDistance)
+        if (isDistance > minDistance) {
+            totalInCenterDistance = isDistance - (minDistance)
         }
         Log.d(TAG, "renderAnalyticsReportData: out masofa $farCenterDistance")
         val moneyForInDistance = (totalInCenterDistance) * costPerKm
-        val moneyForFarDistance = (farCenterDistance / 1000.toDouble()) * preferenceManager.getCostOutCenter()
-        Log.d(TAG, "renderAnalyticsReportData: tashqaridagi har bir km uchun narx ${preferenceManager.getCostOutCenter()}")
+        val moneyForFarDistance =
+            (farCenterDistance / 1000.toDouble()) * preferenceManager.getCostOutCenter()
+        Log.d(
+            TAG,
+            "renderAnalyticsReportData: tashqaridagi har bir km uchun narx ${preferenceManager.getCostOutCenter()}"
+        )
         Log.d(TAG, "renderAnalyticsReportData: in Cost $moneyForInDistance")
         Log.d(TAG, "renderAnalyticsReportData: out Cost $moneyForFarDistance")
 
-        val moneyWithKm: Int = TaxiCalculator.roundToNearestMultiple((moneyForInDistance + moneyForFarDistance).roundToInt())// This will also work
+        val moneyTotalDistance = totalDistance * costPerKm
+//        val moneyWithKm: Int = TaxiCalculator.roundToNearestMultiple((moneyForInDistance + moneyForFarDistance).roundToInt())// This will also work
+        val moneyWithKm: Int =
+            TaxiCalculator.roundToNearestMultiple(moneyTotalDistance.roundToInt())// This will also work
 
-        Log.d(TAG, "renderAnalyticsReportData: mijozgacha kutish vaqti ${ConversionUtil.getAllWaitTime()}")
-        Log.d(TAG, "renderAnalyticsReportData: ishda kutish vaqti ${driveAnalyticsData.getPauseTimeWithSecond()}")
+        Log.d(
+            TAG,
+            "renderAnalyticsReportData: mijozgacha kutish vaqti ${ConversionUtil.getAllWaitTime()}"
+        )
+        Log.d(
+            TAG,
+            "renderAnalyticsReportData: ishda kutish vaqti ${driveAnalyticsData.getPauseTimeWithSecond()}"
+        )
         val waitTime = driveAnalyticsData.getPauseTimeWithSecond() + ConversionUtil.getAllWaitTime()
-        val moneyWithTime = TaxiCalculator.roundToNearestMultiple(((waitTime / 60.toDouble()) * preferenceManager.getCostWaitTimePerMinute()).toInt())
+        val moneyWithTime =
+            TaxiCalculator.roundToNearestMultiple(((waitTime / 60.toDouble()) * preferenceManager.getCostWaitTimePerMinute()).toInt())
 
 
         preferenceManager.clearPassengerPhone()
@@ -164,33 +159,71 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
 
         viewBinding.waitTimeTxt.text = ConversionUtil.convertSecondsToMinutes(waitTime.toInt())
         viewBinding.km.text = driveAnalyticsData.getTotalDistanceAsString()
-        viewBinding.startcost.text = PhoneNumberUtil.formatMoneyNumberPlate(preferenceManager.getStartCost().toString())
+        viewBinding.startcost.text =
+            PhoneNumberUtil.formatMoneyNumberPlate(preferenceManager.getStartCost().toString())
         viewBinding.priceTripNoWait.text = PhoneNumberUtil.formatMoneyNumberPlate(
             moneyWithKm.toString()
         )
 
-        driverViewModel.completeOrder(
+        val order =
             OrderCompleteRequest(
                 cost = allPrice,
                 distance = driveAnalyticsData.getDistance(),
                 wait_time = waitTime.toInt(),
                 wait_cost = moneyWithTime
             )
-        )
 
-        viewBinding.priceWait.text = PhoneNumberUtil.formatMoneyNumberPlate(moneyWithTime.toString())
+
+
+
+        viewBinding.priceWait.text =
+            PhoneNumberUtil.formatMoneyNumberPlate(moneyWithTime.toString())
 
         viewBinding.priceAll.text = PhoneNumberUtil.formatMoneyNumberPlate(allPrice.toString())
 
         viewBinding.finishButtonDialog.setOnClickListener {
-            viewModel.deleteDrive(driveId = raceId)
-            preferenceManager.timeClear()
-            navigateToDashboardFragment()
+            driverViewModel.completeOrder(
+                order
+            )
+        }
+
+        driverViewModel.completeOrder.observe(viewLifecycleOwner) {
+            when (it.state) {
+                ResourceState.ERROR -> {
+                    preferenceManager.saveLastRace(order,1)
+
+                    viewModel.deleteDrive(driveId = raceId)
+                    preferenceManager.timeClear()
+                    viewBinding.finishButtonDialog.stopAnimation()
+                    navigateToDashboardFragment()
+
+                }
+
+                ResourceState.SUCCESS -> {
+                    preferenceManager.saveLastRace(order,-1)
+
+                    viewBinding.finishButtonDialog.stopAnimation()
+
+                    driverViewModel.completedOrder()
+                    viewModel.deleteDrive(driveId = raceId)
+                    preferenceManager.timeClear()
+                    navigateToDashboardFragment()
+                }
+
+                ResourceState.LOADING -> {
+                    viewBinding.finishButtonDialog.startAnimation()
+
+                }
+            }
 
         }
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        viewBinding.finishButtonDialog.dispose()
+    }
     private fun navigateToDashboardFragment() {
         activity?.let { currentActivity ->
             val intent = currentActivity.intent
@@ -219,7 +252,11 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         }
     }
 
-    private fun pointsWithinDistance(points: List<LocationPoint>, center: LocationPoint, minDistance: Int): List<LocationPoint> {
+    private fun pointsWithinDistance(
+        points: List<LocationPoint>,
+        center: LocationPoint,
+        minDistance: Int
+    ): List<LocationPoint> {
         return points.filter { haversineDistance(it, center) >= minDistance }
     }
 
@@ -237,7 +274,8 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
 
         return R * c
     }
-    companion object{
-        val  TAG = "finishDialog"
+
+    companion object {
+        val TAG = "finishDialog"
     }
 }

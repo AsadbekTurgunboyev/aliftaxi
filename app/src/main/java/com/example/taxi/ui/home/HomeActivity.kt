@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import com.example.taxi.R
 import com.example.taxi.components.service.ActivityMessenger
@@ -24,6 +23,7 @@ import com.example.taxi.components.service.DriveBackGroundService
 import com.example.taxi.components.service.KillStateDialogService
 import com.example.taxi.databinding.ActivityHomeBinding
 import com.example.taxi.domain.model.DashboardData
+import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.socket.SocketMessage
 import com.example.taxi.domain.model.socket.SocketOnlyForYouData
 import com.example.taxi.domain.model.socket.toOrderData
@@ -38,8 +38,13 @@ import com.example.taxi.ui.home.driver.driveReport.DriveFinishDialog
 import com.example.taxi.ui.home.driver.driveReport.DriveReportViewModel
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.example.taxi.utils.DialogUtils
+import com.example.taxi.utils.Resource
+import com.example.taxi.utils.ResourceState
 import com.example.taxi.utils.ViewUtils
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -47,6 +52,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+private const val MY_REQUEST_CODE = 999
 
 class HomeActivity : AppCompatActivity(), ServiceConnection {
     private val OVERLAY_PERMISSION_REQUEST_CODE = 5
@@ -63,6 +69,7 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
 
     //    private lateinit var locationEngine: LocationEngine
     lateinit var viewBinding: ActivityHomeBinding
+
 
 
     private val receiver = object : BroadcastReceiver() {
@@ -113,6 +120,27 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
         setContentView(viewBinding.root)
 
 
+        val appUpdateManager = AppUpdateManagerFactory.create(this)
+
+        // Returns an intent object that you use to check for an update.
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+        // Checks that the platform will allow the specified type of update.
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+            ) {
+                // Request the update.
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    AppUpdateType.IMMEDIATE,
+                    this,
+                    MY_REQUEST_CODE
+                )
+            }
+        }
+
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.homeFragNavHost) as NavHostFragment
         navController = navHostFragment.navController
@@ -157,6 +185,38 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
 
     }
 
+//    private fun completeOrderUi(data: Resource<MainResponse<Any>>?) {
+//        when(data?.state){
+//            ResourceState.LOADING ->{
+//                Log.d("internet1", "completeOrderUi: loading")
+//            }
+//            ResourceState.SUCCESS ->{
+//                userPreferenceManager.saveLastRaceId(-1)
+//                driverViewModel.completedOrder()
+//                Log.d("internet1", "completeOrderUi: suc")
+//
+//            }
+//            ResourceState.ERROR ->{
+//                Log.d("internet1", "completeOrderUi: eror")
+//                if (data.data?.status != 400){
+//                    checkAndCompleteOrderLostNetwork()
+//                }else{
+//                    userPreferenceManager.saveLastRaceId(-1)
+//
+//                }
+//            }
+//
+//            else -> {}
+//        }
+//    }
+
+//    private fun checkAndCompleteOrderLostNetwork() {
+//        if (userPreferenceManager.getLastRaceId() > 0) {
+//            driverViewModel.completeOrderLostNetwork(
+//                userPreferenceManager.getLastRace()
+//            )
+//        }
+//    }
 
     private fun hasOverlayPermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -188,7 +248,6 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
     override fun onStart() {
         super.onStart()
 
-        Log.d("xatolik", "onStart: bu ishladi")
         if (userPreferenceManager.getIsOrderCancel()) {
             val d = DialogUtils.orderCancelDialog(this)
             d.show()
@@ -201,18 +260,35 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
             Intent(this, DriveBackGroundService::class.java), this, Context.BIND_AUTO_CREATE
         )
         val currentDestinationId = navController.currentDestination?.id
-        if (currentDestinationId != R.id.driverFragment) {
+        if (userPreferenceManager.getStatusIsTaximeter()){
             if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
                 when (userPreferenceManager.getDriverStatus()) {
                     UserPreferenceManager.DriverStatus.STARTED -> {
                         driverViewModel.startedOrder()
                         Log.d("xatolik", "onStart:start ishladi ")
                     }
+
                     UserPreferenceManager.DriverStatus.ARRIVED -> driverViewModel.arrivedOrder()
                     UserPreferenceManager.DriverStatus.ACCEPTED -> driverViewModel.acceptedOrder()
                     else -> {}
                 }
-                navController.navigate(R.id.driverFragment)
+                navController.navigate(R.id.taximeterFragment)
+            }
+        }else {
+            if (currentDestinationId != R.id.driverFragment) {
+                if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
+                    when (userPreferenceManager.getDriverStatus()) {
+                        UserPreferenceManager.DriverStatus.STARTED -> {
+                            driverViewModel.startedOrder()
+                            Log.d("xatolik", "onStart:start ishladi ")
+                        }
+
+                        UserPreferenceManager.DriverStatus.ARRIVED -> driverViewModel.arrivedOrder()
+                        UserPreferenceManager.DriverStatus.ACCEPTED -> driverViewModel.acceptedOrder()
+                        else -> {}
+                    }
+                    navController.navigate(R.id.driverFragment)
+                }
             }
         }
     }

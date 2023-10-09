@@ -5,6 +5,7 @@ import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
 import com.example.taxi.domain.model.balance.BalanceData
+import com.example.taxi.domain.model.checkAccess.AccessModel
 import com.example.taxi.domain.model.history.*
 import com.example.taxi.domain.model.location.LocationRequest
 import com.example.taxi.domain.model.order.*
@@ -58,6 +59,10 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
         return apiService.orderAccept(id = id)
     }
 
+    override fun orderWithTaximeter(): Observable<MainResponse<OrderAccept<UserModel>>> {
+        return apiService.orderWithTaximeter()
+    }
+
     override fun arrivedOrder(): Observable<MainResponse<Any>> {
         return apiService.arrivedOrder()
     }
@@ -70,8 +75,16 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
         return apiService.completeOrder(request = request)
     }
 
+    override fun completeOrderNoNetwork(request: OrderCompleteRequest): Observable<MainResponse<Any>> {
+        return apiService.completeOrderNoNetwork(request = request)
+    }
+
     override fun sendLocation(request: LocationRequest): Observable<MainResponse<Any>> {
         return apiService.sendLocation(request = request)
+    }
+
+    override fun checkAccess(request: AccessModel): Observable<MainResponse<Any>> {
+        return apiService.checkAccess(request = request)
     }
 
     override fun getDriverById(driver_id: Int): Observable<MainResponse<DriverNameByIdResponse>> {

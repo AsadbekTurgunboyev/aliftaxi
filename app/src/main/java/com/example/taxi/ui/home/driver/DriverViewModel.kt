@@ -4,18 +4,23 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.taxi.custom.SingleLiveEvent
+import com.example.taxi.R
 import com.example.taxi.domain.exception.traceErrorException
 import com.example.taxi.domain.model.MainResponse
+import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.OrderCompleteRequest
-import com.example.taxi.domain.preference.UserPreferenceManager
+import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.usecase.main.GetMainResponseUseCase
 import com.example.taxi.ui.home.DriveAction
+import com.example.taxi.utils.Event
 import com.example.taxi.utils.Resource
 import com.example.taxi.utils.ResourceState
+import com.google.gson.Gson
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
-import org.koin.java.KoinJavaComponent.inject
+import retrofit2.HttpException
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) : ViewModel() {
 
@@ -25,7 +30,8 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
         value = DriveAction.ACCEPT
     }
 
-
+    private var _acceptWithTaximeter = MutableLiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>>()
+    val acceptWithTaximeter:LiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>> get() = _acceptWithTaximeter
 
     private var _startOrder = MutableLiveData<Resource<MainResponse<Any>>>()
     val startOrder: LiveData<Resource<MainResponse<Any>>> = _startOrder
@@ -36,15 +42,18 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
     private var _completeOrder = MutableLiveData<Resource<MainResponse<Any>>>()
     val completeOrder: LiveData<Resource<MainResponse<Any>>> get() = _completeOrder
 
+    private var _completeOrderLostNetwork = MutableLiveData<Resource<MainResponse<Any>>>()
+    val completeOrderLostNetwork: LiveData<Resource<MainResponse<Any>>> get() = _completeOrderLostNetwork
 
-    fun arriveOrder(){
-
+    fun arriveOrder() {
         _arriveOrder.postValue(Resource(ResourceState.LOADING))
         compositeDisposable.add(mainResponseUseCase.arrivedOrder().subscribeOn(Schedulers.io())
             .doOnSubscribe {
                 // Perform any setup tasks before the subscription starts
             }.doOnTerminate {}.subscribe({ response ->
                 _arriveOrder.postValue(Resource(ResourceState.SUCCESS, response))
+
+
             }, { error ->
                 _arriveOrder.postValue(
                     Resource(
@@ -76,6 +85,80 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
         )
     }
 
+    fun completeOrderLostNetwork(orderCompleteRequest: OrderCompleteRequest) {
+        _completeOrderLostNetwork.postValue(Resource(ResourceState.LOADING))
+        compositeDisposable.add(mainResponseUseCase.completeOrderNoNetwork(orderCompleteRequest)
+            .subscribeOn(Schedulers.io())
+            .doOnSubscribe {
+                // Perform any setup tasks before the subscription starts
+            }.doOnTerminate {}.subscribe({ response ->
+                _completeOrderLostNetwork.postValue(Resource(ResourceState.SUCCESS, response))
+
+            }, { error ->
+                val errorMessage = if (error is HttpException) {
+                    try {
+                        val errorBody = error.response()?.errorBody()?.string()
+                        val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                        mainResponse.status
+                    } catch (e: Exception) {
+                        "An error occurred"
+                    }
+                } else {
+                    "An error occurred"
+                }
+                _completeOrderLostNetwork.postValue(
+                    Resource(
+                        ResourceState.ERROR,
+                        message = errorMessage.toString()
+                    )
+                )
+
+            })
+        )
+    }
+
+
+    fun acceptWithTaximeter(){
+            _acceptWithTaximeter.postValue(Event(Resource(ResourceState.LOADING)))
+            compositeDisposable.add(
+                mainResponseUseCase.acceptWithTaximeter()
+                    .timeout(10, TimeUnit.SECONDS)
+                    .subscribeOn(Schedulers.io())
+                    .doOnSubscribe {}
+                    .doOnTerminate {}
+                    .subscribe({ response ->
+                        Log.d("zakaz", "acceptWithTaximeter:re  $response")
+                        _acceptWithTaximeter.postValue(Event(Resource(ResourceState.SUCCESS, response)))
+                    }, { error ->
+                        Log.d("zakaz", "acceptWithTaximeter:e  $error")
+
+                        val errorMessage = when (error) {
+                            is HttpException -> {
+                                try {
+                                    val errorBody = error.response()?.errorBody()?.string()
+                                    val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                                    mainResponse.message
+                                } catch (e: Exception) {
+                                    R.string.cannot_connect_to_server
+                                }
+                            }
+                            is IOException -> R.string.no_internet
+                            else -> R.string.unknow_error
+                        }
+                        _acceptWithTaximeter.postValue(
+                            Event(
+                                Resource(
+                                    ResourceState.ERROR,
+                                    message = errorMessage.toString()
+                                )
+                            )
+                        )
+
+                    })
+            )
+
+    }
+
     fun completeOrder(orderCompleteRequest: OrderCompleteRequest) {
         _completeOrder.postValue(Resource(ResourceState.LOADING))
         compositeDisposable.add(mainResponseUseCase.completeOrder(orderCompleteRequest)
@@ -97,24 +180,24 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
         )
     }
 
-    fun acceptedOrder(){
-        orderStartCompleteLiveData.postValue( DriveAction.ACCEPT)
+    fun acceptedOrder() {
+        orderStartCompleteLiveData.postValue(DriveAction.ACCEPT)
     }
 
-    fun arrivedOrder(){
-        orderStartCompleteLiveData.postValue( DriveAction.ARRIVED)
+    fun arrivedOrder() {
+        orderStartCompleteLiveData.postValue(DriveAction.ARRIVED)
     }
 
-    fun startedOrder(){
-        orderStartCompleteLiveData.postValue( DriveAction.STARTED)
+    fun startedOrder() {
+        orderStartCompleteLiveData.postValue(DriveAction.STARTED)
     }
 
-    fun completedOrder(){
-        orderStartCompleteLiveData.postValue( DriveAction.COMPLETED)
+    fun  completedOrder() {
+        orderStartCompleteLiveData.postValue(DriveAction.COMPLETED)
     }
 
 
-    fun clearAllData(){
+    fun clearAllData() {
         _arriveOrder = MutableLiveData()
         _startOrder = MutableLiveData()
         _completeOrder = MutableLiveData()

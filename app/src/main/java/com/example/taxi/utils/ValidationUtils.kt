@@ -1,8 +1,5 @@
 package com.example.taxi.utils
 
-import android.text.Editable
-import android.text.TextWatcher
-import com.google.android.material.textfield.TextInputLayout
 object ValidationUtils {
     private const val NAME_PATTERN = "^[\\p{L} .'-]+$"
     private const val FULL_NAME_PATTERN = "^[\\p{L} .'-]+ [\\p{L} .'-]+$"
@@ -15,6 +12,6 @@ object ValidationUtils {
     fun isValidCarColor(color: String): Boolean = color.isNotEmpty()
     fun isValidCarPosition(position: String): Boolean = position.isNotEmpty()
     fun isValidCarFirstTwoNumber(num1: String): Boolean = num1.length == 2
-    fun isValidCarMainNumber(number: String): Boolean = number.length == 8
-    fun isValidCarPassport(passport: String): Boolean = passport.length == 8
+    fun isValidCarMainNumber(number: String): Boolean = number.length <= 10
+    fun isValidCarPassport(passport: String): Boolean = passport.length <= 14
 }

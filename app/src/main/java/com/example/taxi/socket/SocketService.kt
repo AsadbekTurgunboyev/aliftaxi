@@ -7,19 +7,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.taxi.R
 import com.example.taxi.domain.model.location.LocationRequest
 import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.ui.home.HomeActivity
+import com.example.taxi.R
+import com.example.taxi.ui.home.order.OrderViewModel
 import com.mapbox.android.core.location.*
 import com.mapbox.geojson.Point
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement.distance
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.android.inject
@@ -29,6 +33,44 @@ class SocketService : android.app.Service() {
 
     // Initialize your dependencies here, e.g., ViewModel, CoroutineScope, SocketMessageProcessor
 
+    private var isAckReceived = true
+    private val orderViewModel: OrderViewModel by inject()
+    private val compositeDisposable = CompositeDisposable()
+    private var hasLocationChanged = false
+    private val handler = Handler(Looper.getMainLooper())
+    private val locationSenderRunnable: Runnable = object : Runnable {
+        override fun run() {
+            if (hasLocationChanged && lastSentLocation != null) {
+                hasLocationChanged = false
+                socketMessageProcessor.sendLocation(
+                    LocationRequest(
+                        latitude = lastSentLocation!!.latitude(),
+                        longitude = lastSentLocation!!.longitude(),
+                        accuracy = 0, // Replace with actual accuracy
+                        angle = 0 // Replace with actual angle
+                    )
+                )
+                compositeDisposable.add(
+                    orderViewModel.waitForAck()
+                        .subscribeOn(Schedulers.io())
+                        .subscribe({
+                            if (it) {
+                                // Acknowledgment received, proceed to next location
+                                handler.postDelayed(this, 15000)
+                            } else {
+                                // No acknowledgment received, retry or skip
+                                handler.postDelayed(this, 15000)
+                            }
+                        }, {
+                            // Timeout or other error occurred
+                            handler.postDelayed(this, 15000)
+                        })
+                )
+            }else{
+                handler.postDelayed(this, 15000)
+            }
+        }
+    }
 
     private val socketMessageProcessor: SocketMessageProcessor by inject()
     private val preferenceManager: UserPreferenceManager by inject()
@@ -78,14 +120,15 @@ class SocketService : android.app.Service() {
         )
         locationEngine = LocationEngineProvider.getBestLocationEngine(this)
         startLocationUpdates()
+        handler.postDelayed(locationSenderRunnable, 15000)
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-        val request = LocationEngineRequest.Builder(10000)
+        val request = LocationEngineRequest.Builder(15000)
             .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
-            .setMaxWaitTime(20000)
-            .setFastestInterval(10000)// Increased maxWaitTime
+            .setMaxWaitTime(15000)
+            .setFastestInterval(10000) // Increased maxWaitTime
             .build()
 
         locationEngine.requestLocationUpdates(request, object :
@@ -111,16 +154,17 @@ class SocketService : android.app.Service() {
 
 
                     // Replace this with your own ViewModel or use socketMessageProcessor to send the location
-                    socketMessageProcessor.sendLocation(
-                        LocationRequest(
-                            latitude = latitude,
-                            longitude = longitude,
-                            accuracy = accuracy.toInt(),
-                            angle = angle.toInt()
-                        )
-                    )
+//                    socketMessageProcessor.sendLocation(
+//                        LocationRequest(
+//                            latitude = latitude,
+//                            longitude = longitude,
+//                            accuracy = accuracy.toInt(),
+//                            angle = angle.toInt()
+//                        )
+//                    )
 
                     // Store the sent location
+                    hasLocationChanged = true
                     lastSentLocation = currentLocationPoint
                 }
             }
@@ -159,6 +203,7 @@ class SocketService : android.app.Service() {
         socketRepository = null
         unregisterReceiver(receiver)
         releaseWakelock()
+        handler.removeCallbacks(locationSenderRunnable)
     }
 
     private fun createNotificationChannel() {

@@ -1,5 +1,6 @@
 package com.example.taxi.domain.usecase.main
 
+import com.example.taxi.domain.model.checkAccess.AccessModel
 import com.example.taxi.domain.model.order.OrderCompleteRequest
 import com.example.taxi.domain.model.tarif.ModeRequest
 import com.example.taxi.domain.model.transfer.TransferRequest
@@ -25,12 +26,21 @@ class GetMainResponseUseCase(private val mainRepository: MainRepository) {
 
     fun acceptOrder(id: Int) = mainRepository.orderAccept(id = id)
 
+    fun acceptWithTaximeter() = mainRepository.orderWithTaximeter()
+
     fun arrivedOrder() = mainRepository.arrivedOrder()
 
     fun startOrder() = mainRepository.startOrder()
 
+    fun checkAccess(request: AccessModel) = mainRepository.checkAccess(request = request)
+
     fun completeOrder(request: OrderCompleteRequest) =
         mainRepository.competeOrder(request = request)
+
+
+    fun completeOrderNoNetwork(request: OrderCompleteRequest) =
+        mainRepository.completeOrderNoNetwork(request = request)
+
 
     fun sendLocation(request: com.example.taxi.domain.model.location.LocationRequest) =
         mainRepository.sendLocation(

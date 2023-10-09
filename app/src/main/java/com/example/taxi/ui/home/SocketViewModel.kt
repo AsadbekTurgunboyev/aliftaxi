@@ -4,9 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.example.taxi.domain.model.location.LocationRequest
-import com.example.taxi.utils.Resource
-import com.example.taxi.utils.ResourceState
 import io.reactivex.disposables.CompositeDisposable
 
 class SocketViewModel(private val savedStateHandle: SavedStateHandle): ViewModel() {

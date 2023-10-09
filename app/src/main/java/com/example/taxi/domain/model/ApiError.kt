@@ -2,7 +2,7 @@ package com.example.taxi.domain.model
 
 
 private const val BAD_REQUEST_ERROR_MESSAGE = "Bad Request!"
-private const val FORBIDDEN_ERROR_MESSAGE = "Forbidden!"
+public const val FORBIDDEN_ERROR_MESSAGE = "Forbidden!"
 private const val NOT_FOUND_ERROR_MESSAGE = "Not Found!"
 private const val METHOD_NOT_ALLOWED_ERROR_MESSAGE = "Method Not Allowed!"
 private const val CONFLICT_ERROR_MESSAGE = "Conflict!"

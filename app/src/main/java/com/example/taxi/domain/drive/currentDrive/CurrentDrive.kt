@@ -1,17 +1,17 @@
 package com.example.taxi.domain.drive.currentDrive
 
+import android.util.Log
 import com.example.taxi.domain.drive.Drive
 import com.example.taxi.domain.drive.drivepath.DrivePathBuilder
 import com.example.taxi.domain.drive.drivepath.DrivePathItem
 import com.example.taxi.domain.location.LocationPoint
-import com.example.taxi.utils.SphericalUtil
 import com.google.android.gms.maps.model.LatLng
 import org.koin.core.context.GlobalContext
 import java.util.concurrent.TimeUnit
 
 class CurrentDrive {
 
-    private val sphericalUtil: SphericalUtil by lazy {
+    private val sphericalUtil: com.example.taxi.utils.SphericalUtil by lazy {
         GlobalContext.get().get()
     }
 
@@ -34,7 +34,8 @@ class CurrentDrive {
     private var lastPingTime = startTime
     private var lastLocation = startLocation
     private var currentSpeed: Float = 0f
-    private var status: Int = CurrentDriveStatus.STARTING
+    private var status: Int = com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STARTING
+
 
     fun pingData(
         locationTime: Long,
@@ -42,7 +43,12 @@ class CurrentDrive {
         currentLon: Double,
         gpsSpeed: Float?,
     ) {
-        status = CurrentDriveStatus.STARTED
+        status = com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STARTED
+
+
+
+        // Calculate the distance in meters between the new location and the last location
+
         if (startLocation == null) {
             initialize(locationTime, currentLat, currentLon)
         }
@@ -50,6 +56,7 @@ class CurrentDrive {
         val currentLocation = LocationPoint(currentLat, currentLon)
         val distanceInMetre = getDistanceInMetre(prevLocationNonNull, currentLat, currentLon)
         val timeTakenInSecs = TimeUnit.MILLISECONDS.toSeconds(locationTime - lastPingTime)
+
 
         if (pauseCalculator.considerPingForStopPause(locationTime)) {
             lastLocation = currentLocation
@@ -116,16 +123,18 @@ class CurrentDrive {
 
     fun getStatus() = status
 
-    fun isStopped() = status == CurrentDriveStatus.STOPPED
+    fun isStopped() = status == com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STOPPED
 
-    fun isStarting() = status == CurrentDriveStatus.STARTING
+    fun isPaused() = status == com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.PAUSED
+
+    fun isStarting() = status == com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STARTING
 
     fun onStart() {
-        this.status = CurrentDriveStatus.STARTING
+        this.status = com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STARTING
     }
 
     fun onPause() {
-        this.status = CurrentDriveStatus.PAUSED
+        this.status = com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.PAUSED
         pauseCalculator.onPause()
         lastLocation?.let {
             drivePathBuilder.addRacePathItem(it, currentSpeed, lastPingTime, true)
@@ -133,7 +142,7 @@ class CurrentDrive {
     }
 
     fun onStop() {
-        this.status = CurrentDriveStatus.STOPPED
+        this.status = com.example.taxi.domain.drive.currentDrive.CurrentDriveStatus.STOPPED
         lastLocation?.let {
             drivePathBuilder.addRacePathItem(it, currentSpeed, lastPingTime, true)
         }

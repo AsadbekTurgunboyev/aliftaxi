@@ -4,6 +4,8 @@ import com.example.taxi.domain.model.selfie.GenderModel
 import com.google.gson.annotations.SerializedName
 
 
+
+
 data class OrderAccept<U>(
     val id: Int,
     val type: Type,
@@ -19,37 +21,39 @@ data class OrderAccept<U>(
     @SerializedName("mode") val mode: ModeModel,
     val activeHistory: Any?,
     val settings: List<Settings>
-){
+) {
 
     fun getSum(): Int {
         return services.sumOf { it.cost!! } + getMinCost()
     }
 
-    fun getCostPerKm(): Int{
+    fun getCostPerKm(): Int {
         val setting = settings.find { it.name == "cost_per_km" }
         return setting?.value?.toIntOrNull() ?: 0
     }
-    fun getCostPerKmOutside(): Int{
+
+    fun getCostPerKmOutside(): Int {
         val settings = settings.find { it.name == "cost_out_center" }
         return settings?.value?.toIntOrNull() ?: 0
     }
-    fun getMinDistance(): Int{
+
+    fun getMinDistance(): Int {
         val setting = settings.find { it.name == "min_distance" }
         return setting?.value?.toIntOrNull() ?: 0
     }
 
-
-    private fun getMinCost(): Int {
+    fun getMinCost(): Int {
         val setting = settings.find { it.name == "cost_min_distance" }
         return setting?.value?.toIntOrNull() ?: 0
     }
-     fun getMinWaitTime(): Int{
-        val setting = settings.find{it.name == "min_wait_time"}
+
+    fun getMinWaitTime(): Int {
+        val setting = settings.find { it.name == "min_wait_time" }
         return setting?.value?.toIntOrNull() ?: 0
     }
 
-    fun getCostMinWaitTimePerMinute(): Int{
-        val setting = settings.find{it.name == "cost_wait_time_per_minute"}
+    fun getCostMinWaitTimePerMinute(): Int {
+        val setting = settings.find { it.name == "cost_wait_time_per_minute" }
         return setting?.value?.toIntOrNull() ?: 0
     }
 }
@@ -59,11 +63,12 @@ data class UserModel(
     val name: String,
     @SerializedName("gender") val gender: GenderModel,
     val phone: String
-){
-    fun getPassengerPhone(): String{
+) {
+    fun getPassengerPhone(): String {
         return phone
     }
 }
+
 data class ModeModel(
     @SerializedName("number") val number: Int,
     @SerializedName("name") val name: String
@@ -78,7 +83,7 @@ data class Settings(
     val value: String
 )
 
-enum class CostType{
+enum class CostType {
     COST_PER_KM,
     COST_MIN_DISTANCE,
     MIN_WAIT_TIME,

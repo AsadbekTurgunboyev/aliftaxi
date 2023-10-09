@@ -3,7 +3,6 @@ package com.example.taxi.domain.drive.drivepath
 import com.bike.race.domain.drive.drivepath.SpeedDiffCalculator
 import com.example.taxi.dbModels.DrivePathItemEntity
 import com.example.taxi.domain.location.LocationPoint
-import com.example.taxi.utils.SphericalUtil
 import com.google.android.gms.maps.model.LatLng
 import org.koin.core.context.GlobalContext
 
@@ -14,7 +13,7 @@ class DrivePathFilter {
     private var topSpeed: Float = 0f
 
     private val sphericalUtil by lazy {
-        GlobalContext.get().get<SphericalUtil>()
+        GlobalContext.get().get<com.example.taxi.utils.SphericalUtil>()
     }
 
     private val pathAngleDiffChecker by lazy {

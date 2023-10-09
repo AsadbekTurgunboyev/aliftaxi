@@ -9,9 +9,6 @@ import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat.getColor
 import com.example.taxi.utils.ConversionUtil
-import java.text.DecimalFormat
-import java.text.NumberFormat
-import java.util.*
 
 
 data class OrderData<A>(

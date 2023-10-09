@@ -1,6 +1,5 @@
 package com.example.taxi.di
 
-import androidx.lifecycle.SavedStateHandle
 import com.example.taxi.data.repository.MainRepositoryImpl
 import com.example.taxi.data.repository.RegisterRepositoryImpl
 import com.example.taxi.domain.preference.UserPreferenceManager

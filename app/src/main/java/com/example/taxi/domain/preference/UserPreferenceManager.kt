@@ -6,13 +6,14 @@ import androidx.preference.PreferenceManager
 import com.example.taxi.domain.location.LocationPoint
 import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.order.OrderAccept
+import com.example.taxi.domain.model.order.OrderCompleteRequest
 import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.model.register.confirm_password.UserData
 import com.example.taxi.domain.model.selfie.SelfieAllData
 import com.example.taxi.domain.model.selfie.StatusModel
 import com.example.taxi.utils.isMetric
 import org.json.JSONObject
-import java.util.*
+import java.util.Locale
 
 class UserPreferenceManager(private val context: Context) {
     private val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -29,6 +30,8 @@ class UserPreferenceManager(private val context: Context) {
         const val PASSENGER_NAME = "passenger_name"
         const val PASSENGER_COMMENT = "passenger_comment"
         const val DESTINATION1 = "destination_1"
+        const val DESTINATION1_LONG = "destination_1_long"
+        const val DESTINATION1_LAT = "destination_1_lat"
         const val DESTINATION2 = "destination_2"
         const val DRIVER_STATUS = "driver_status"
         const val CENTER_RADIUS = "center_radius"
@@ -36,27 +39,44 @@ class UserPreferenceManager(private val context: Context) {
         const val COST_WAIT_TIME_PER_MINUTE = "cost_wait_time_per_minute"
         const val LAT = "center_lat"
         const val LONG = "center_long"
+        const val LAST_RACE_ID = "last_race_id"
+        const val LAST_RACE_DISTANCE = "last_race_distance"
+        const val LAST_RACE_COST = "last_race_cost"
+        const val LAST_RACE_WAIT_COST = "last_race_wait_cost"
+        const val LAST_RACE_WAIT_TIME = "last_race_wait_time"
         private const val KEY_TOGGLE_STATE = "ToggleState"
+        const val IS_TAXIMETER = "is_taximeter"
+
 
     }
 
     fun savePriceSettings(order: OrderAccept<UserModel>) {
 
         Log.d("narx", "savePriceSettings: ichkarida ${order.start_cost}")
+        Log.d("narx", "savePriceSettings: har bir km ${order.getMinCost()}")
         with(prefs.edit()) {
             putInt(COST_PER_KM, order.getCostPerKm())
             putInt(MIN_DISTANCE, order.getMinDistance())
-            putInt(START_COST, order.start_cost)
+            if (order.start_cost != 0) putInt(START_COST, order.start_cost) else putInt(START_COST, order.getMinCost())
+
             putInt(COST_OUT_CENTER, order.getCostPerKmOutside())
             putInt(MIN_WAIT_TIME, order.getMinWaitTime())
             putString(PASSENGER_PHONE, order.user.phone)
             putString(PASSENGER_COMMENT, order.comment)
             putString(PASSENGER_NAME, order.user.name)
             putString(DESTINATION1, order.address.from)
-            putInt(COST_WAIT_TIME_PER_MINUTE,order.getCostMinWaitTimePerMinute())
+            putString(DESTINATION1_LONG,order.longitude1)
+            putString(DESTINATION1_LAT,order.latitude1)
+            putInt(COST_WAIT_TIME_PER_MINUTE, order.getCostMinWaitTimePerMinute())
             putString(DESTINATION2, order.address.to)
         }.apply()
     }
+
+    fun saveStatusIsTaximeter(isOn: Boolean){
+        prefs.edit().putBoolean(IS_TAXIMETER, isOn).apply()
+    }
+
+    fun getStatusIsTaximeter(): Boolean = prefs.getBoolean(IS_TAXIMETER,false)
 
     fun saveToggleState(isOn: Boolean) {
         prefs.edit().putBoolean(KEY_TOGGLE_STATE, isOn).apply()
@@ -65,6 +85,7 @@ class UserPreferenceManager(private val context: Context) {
     fun getToggleState(): Boolean {
         return prefs.getBoolean(KEY_TOGGLE_STATE, false)
     }
+
     fun saveStateTime(elapsedTime: Int, isCountingDown: Boolean) {
         prefs.edit().apply {
             putInt("elapsedTime", elapsedTime)
@@ -73,23 +94,26 @@ class UserPreferenceManager(private val context: Context) {
         }
     }
 
-    fun saveIsCountingDown(isCountingDown : Boolean){
+    fun saveIsCountingDown(isCountingDown: Boolean) {
         prefs.edit().putBoolean("isCountingDown", isCountingDown).apply()
     }
+
     fun getElapsedTime(): Int = prefs.getInt("elapsedTime", 0)
-    fun getIsCountingDown(): Boolean = prefs.getBoolean("isCountingDown",true)
 
-    fun setStartedTimeAcceptOrder(time: Long){
-        prefs.edit().putLong("startOrderTime",time).apply()
-    }
-    fun setFinishedTimeOrder(time: Long){
+    fun getIsCountingDown(): Boolean = prefs.getBoolean("isCountingDown", true)
 
-        prefs.edit().putLong("finishOrderTime",time).apply()
+    fun setStartedTimeAcceptOrder(time: Long) {
+        prefs.edit().putLong("startOrderTime", time).apply()
     }
 
-    fun getStartedTimeAcceptOrder():Long = prefs.getLong("startOrderTime",System.currentTimeMillis())
+    fun setFinishedTimeOrder(time: Long) {
+        prefs.edit().putLong("finishOrderTime", time).apply()
+    }
 
-    fun getFinishedTimeAcceptOrder():Long = prefs.getLong("finishOrderTime",0)
+    fun getStartedTimeAcceptOrder(): Long =
+        prefs.getLong("startOrderTime", System.currentTimeMillis())
+
+    fun getFinishedTimeAcceptOrder(): Long = prefs.getLong("finishOrderTime", 0)
 
     fun getCostWaitTimePerMinute(): Int = prefs.getInt(COST_WAIT_TIME_PER_MINUTE, 0)
 
@@ -103,6 +127,9 @@ class UserPreferenceManager(private val context: Context) {
 
     fun getPassengerComment(): String? = prefs.getString(PASSENGER_COMMENT, "-")
 
+    fun getDestinationLong(): String? = prefs.getString(DESTINATION1_LONG, "0.0")
+
+    fun getDestinationLat(): String? = prefs.getString(DESTINATION1_LAT, "0.0")
 
     fun clearPassengerPhone() {
         prefs.edit().remove(PASSENGER_PHONE).apply()
@@ -124,7 +151,6 @@ class UserPreferenceManager(private val context: Context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
             .getBoolean("privacy_read_status", false)
     }
-
 
     fun setRegisterComplete() {
         prefs.edit().putBoolean("is_completed", true).apply()
@@ -185,6 +211,7 @@ class UserPreferenceManager(private val context: Context) {
         when (getDistanceUnit()) {
             DistanceUnit.KILOMETERS -> sharedPreferences.edit().putString("distance_unit", "km")
                 .apply()
+
             DistanceUnit.MILES -> sharedPreferences.edit().putString("distance_unit", "miles")
                 .apply()
         }
@@ -196,9 +223,11 @@ class UserPreferenceManager(private val context: Context) {
             "light" -> {
                 ThemeStyle.LIGHT
             }
+
             "dark" -> {
                 ThemeStyle.DARK
             }
+
             else -> {
                 ThemeStyle.AUTO
             }
@@ -211,9 +240,11 @@ class UserPreferenceManager(private val context: Context) {
             "la" -> {
                 Language.UZBEK
             }
-            "uz" -> {
+
+            "com" -> {
                 Language.KRILL
             }
+
             else -> {
                 Language.RUSSIAN
             }
@@ -311,7 +342,7 @@ class UserPreferenceManager(private val context: Context) {
     enum class Language(val code: String) {
         RUSSIAN("ru"),
         UZBEK("la"),
-        KRILL("uz")
+        KRILL("com")
     }
 
     fun setDriverStatus(status: DriverStatus) {
@@ -343,12 +374,15 @@ class UserPreferenceManager(private val context: Context) {
             distanceUnit == "km" -> {
                 DistanceUnit.KILOMETERS
             }
+
             distanceUnit == "miles" -> {
                 DistanceUnit.MILES
             }
+
             Locale.getDefault().isMetric() -> {
                 DistanceUnit.KILOMETERS
             }
+
             else -> {
                 DistanceUnit.KILOMETERS
             }
@@ -368,46 +402,70 @@ class UserPreferenceManager(private val context: Context) {
     }
 
     fun setIsOrderCancel(b: Boolean) {
-        prefs.edit().putBoolean("isOrderCancel",b).apply()
+        prefs.edit().putBoolean("isOrderCancel", b).apply()
     }
-    fun getIsOrderCancel(): Boolean = prefs.getBoolean("isOrderCancel",false)
 
-     fun timeClear() {
-         prefs.edit().remove("startOrderTime").apply()
-         prefs.edit().remove("finishOrderTime").apply()
-         prefs.edit().remove("transition_time").apply()
-         saveIsCountingDown(true)
-         prefs.edit().remove("is_timer_paused").apply()
+    fun getIsOrderCancel(): Boolean = prefs.getBoolean("isOrderCancel", false)
+
+    fun timeClear() {
+        prefs.edit().remove("startOrderTime").apply()
+        prefs.edit().remove("finishOrderTime").apply()
+        prefs.edit().remove("transition_time").apply()
+        saveIsCountingDown(true)
+        prefs.edit().remove("is_timer_paused").apply()
     }
 
     fun getWaitTime(): Int {
 
-        return prefs.getInt("current_wait_time",0)
+        return prefs.getInt("current_wait_time", 0)
     }
 
     fun getTransitionTime(): Long {
-        return prefs.getLong("transition_time",System.currentTimeMillis())
+        return prefs.getLong("transition_time", System.currentTimeMillis())
 
     }
 
     fun saveTransitionTime(transitionTime: Long) {
-        prefs.edit().putLong("transition_time",transitionTime).apply()
+        prefs.edit().putLong("transition_time", transitionTime).apply()
     }
 
     fun saveIsPaused(value: Boolean) {
-        prefs.edit().putBoolean("is_timer_paused",value).apply()
+        prefs.edit().putBoolean("is_timer_paused", value).apply()
     }
 
     fun getIsPaused(): Boolean {
-        return prefs.getBoolean("is_timer_paused",false)
+        return prefs.getBoolean("is_timer_paused", false)
     }
 
     fun savePauseTime(pauseTime: Long) {
-        prefs.edit().putLong("pause_time",pauseTime).apply()
+        prefs.edit().putLong("pause_time", pauseTime).apply()
     }
 
     fun getPauseTime(): Long {
         return prefs.getLong("pause_time", 0L)
     }
+
+    fun saveLastRaceId(raceId: Int) {
+        prefs.edit().putInt(LAST_RACE_ID, raceId).apply()
+    }
+
+    fun saveLastRace(order: OrderCompleteRequest, raceId: Int) {
+        prefs.edit().putInt(LAST_RACE_DISTANCE, order.distance).apply()
+        prefs.edit().putInt(LAST_RACE_COST, order.cost).apply()
+        prefs.edit().putInt(LAST_RACE_WAIT_COST, order.wait_cost).apply()
+        prefs.edit().putInt(LAST_RACE_WAIT_TIME, order.wait_time).apply()
+        prefs.edit().putInt(LAST_RACE_ID, raceId).apply()
+    }
+    fun getLastRaceId() = prefs.getInt(LAST_RACE_ID,-1)
+
+    fun getLastRace(): OrderCompleteRequest {
+        return OrderCompleteRequest(
+            distance = prefs.getInt(LAST_RACE_DISTANCE, 0),
+            cost = prefs.getInt(LAST_RACE_COST, 0),
+            wait_cost = prefs.getInt(LAST_RACE_WAIT_COST, 0),
+            wait_time = prefs.getInt(LAST_RACE_WAIT_TIME, 0)
+        )
+    }
+
 
 }

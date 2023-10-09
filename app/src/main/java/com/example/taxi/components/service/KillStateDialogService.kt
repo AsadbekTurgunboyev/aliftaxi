@@ -22,7 +22,6 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taxi.R
@@ -33,14 +32,6 @@ import com.example.taxi.ui.home.HomeActivity
 import com.example.taxi.ui.home.order.ServiceOrderAdapter
 import com.example.taxi.utils.*
 import com.example.taxi.utils.ConversionUtil.convertToKm
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationServices
-import com.mapbox.android.core.location.LocationEngine
-import com.mapbox.android.core.location.LocationEngineCallback
-import com.mapbox.android.core.location.LocationEngineProvider
-import com.mapbox.android.core.location.LocationEngineRequest
-import com.mapbox.android.core.location.LocationEngineResult
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types

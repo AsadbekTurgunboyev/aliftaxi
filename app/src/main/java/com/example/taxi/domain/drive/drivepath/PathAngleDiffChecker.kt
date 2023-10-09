@@ -1,7 +1,6 @@
 package com.example.taxi.domain.drive.drivepath
 
 import com.example.taxi.domain.location.LocationPoint
-import com.example.taxi.utils.SphericalUtil
 import com.google.android.gms.maps.model.LatLng
 import org.koin.core.context.GlobalContext
 import kotlin.math.abs
@@ -12,7 +11,7 @@ class PathAngleDiffChecker {
     private var prevPrevLocationPoint: DrivePathItem? = null
 
     private val sphericalUtil by lazy {
-        GlobalContext.get().get<SphericalUtil>()
+        GlobalContext.get().get<com.example.taxi.utils.SphericalUtil>()
     }
 
     fun addLocationPoint(locationPoint: LocationPoint, speed: Float, time: Long) {

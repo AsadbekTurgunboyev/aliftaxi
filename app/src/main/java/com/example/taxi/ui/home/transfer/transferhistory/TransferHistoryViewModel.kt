@@ -39,7 +39,7 @@ class TransferHistoryViewModel(private val getMainResponseUseCase: GetMainRespon
                 .subscribe(
                     { response ->
 
-                        val a = response.data
+
 
                         _historyTransfer.postValue(
                             Resource(

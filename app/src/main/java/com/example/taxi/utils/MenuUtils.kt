@@ -58,6 +58,11 @@ class MenuClass(val context: Context, val preferenceManager: UserPreferenceManag
             )
         ),
         Triple(
+            333,"Group 7", listOf(
+                Triple(233,context.getString(R.string.taximeter),R.drawable.ic_taximeter)
+            )
+        ),
+        Triple(
             234, "Group 2", listOf(
                 Triple(987, context.getString(R.string.about_us), R.drawable.ic_info)
             )
@@ -82,6 +87,7 @@ class MenuClass(val context: Context, val preferenceManager: UserPreferenceManag
 
     private val itemActionViews: Map<Int, View> = mapOf(
         456 to MenuUtils.getActionViewLanguage(context,preferenceManager),
+        233 to MenuUtils.getActionViewNext(context),
         987 to MenuUtils.getActionViewNext(context),
         988 to MenuUtils.getActionViewNext(context),
         989 to MenuUtils.getActionViewNext(context)

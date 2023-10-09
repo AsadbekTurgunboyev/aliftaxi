@@ -4,9 +4,15 @@ import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
 import com.example.taxi.domain.model.balance.BalanceData
-import com.example.taxi.domain.model.history.*
+import com.example.taxi.domain.model.checkAccess.AccessModel
+import com.example.taxi.domain.model.history.HistoryDataResponse
+import com.example.taxi.domain.model.history.Meta
 import com.example.taxi.domain.model.location.LocationRequest
-import com.example.taxi.domain.model.order.*
+import com.example.taxi.domain.model.order.Address
+import com.example.taxi.domain.model.order.OrderAccept
+import com.example.taxi.domain.model.order.OrderCompleteRequest
+import com.example.taxi.domain.model.order.OrderData
+import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.model.selfie.SelfieAllData
 import com.example.taxi.domain.model.selfie.StatusModel
 import com.example.taxi.domain.model.settings.SettingsData
@@ -24,7 +30,7 @@ interface MainRepository {
 
     fun getService(): Observable<ModeResponse>
 
-    fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel,StatusModel>>>
+    fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel, StatusModel>>>
 
     fun setModes(request: ModeRequest): Observable<ModeResponse>
 
@@ -38,13 +44,19 @@ interface MainRepository {
 
     fun orderAccept(id: Int): Observable<MainResponse<OrderAccept<UserModel>>>
 
+    fun orderWithTaximeter():Observable<MainResponse<OrderAccept<UserModel>>>
+
     fun arrivedOrder(): Observable<MainResponse<Any>>
 
     fun startOrder(): Observable<MainResponse<Any>>
 
     fun competeOrder(request: OrderCompleteRequest): Observable<MainResponse<Any>>
 
+    fun completeOrderNoNetwork(request: OrderCompleteRequest): Observable<MainResponse<Any>>
+
     fun sendLocation(request: LocationRequest): Observable<MainResponse<Any>>
+
+    fun checkAccess(request: AccessModel): Observable<MainResponse<Any>>
 
     fun getDriverById(driver_id: Int): Observable<MainResponse<DriverNameByIdResponse>>
 
@@ -56,11 +68,16 @@ interface MainRepository {
         status: Int?
     ): Observable<HistoryDataResponse<Meta>>
 
-    fun transferMoney(request: TransferRequest) : Observable<MainResponse<Any>>
+    fun transferMoney(request: TransferRequest): Observable<MainResponse<Any>>
 
-    fun getTransferHistory(page: Int, from: String?, to: String?, type: Int?): Observable<ResponseTransferHistory<HistoryMeta>>
+    fun getTransferHistory(
+        page: Int,
+        from: String?,
+        to: String?,
+        type: Int?
+    ): Observable<ResponseTransferHistory<HistoryMeta>>
 
     fun getAbout(): Observable<MainResponse<ResponseAbout>>
     fun getFAQ(): Observable<MainResponse<ResponseAbout>>
-   fun getCurrentOrder() : Observable<MainResponse<Any>>
+    fun getCurrentOrder(): Observable<MainResponse<Any>>
 }

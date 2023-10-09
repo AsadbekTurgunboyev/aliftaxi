@@ -12,7 +12,6 @@ import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.MutableLiveData
-import com.example.taxi.BuildConfig
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.LocationRequest
@@ -61,7 +60,7 @@ object LocationPermissionUtils {
     fun getAppPermissionSettingPageIntent(): Intent {
         return Intent(
             Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-            Uri.parse("package:" + BuildConfig.APPLICATION_ID)
+            Uri.parse("package:" + com.example.taxi.BuildConfig.APPLICATION_ID)
         )
     }
 
