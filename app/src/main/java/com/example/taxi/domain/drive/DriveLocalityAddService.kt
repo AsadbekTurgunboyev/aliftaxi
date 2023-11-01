@@ -9,12 +9,10 @@ class DriveLocalityAddService(
 ) {
 
     suspend fun addLocalityInformation() {
-
         val drives = driveRepository.getDrivesWithNoLocalityInfo()
-
-
-
-
+        drives.forEach {
+            getAndUpdateLocality(it)
+        }
     }
 
     suspend fun getAndUpdateLocality(drive: Drive): Drive? {

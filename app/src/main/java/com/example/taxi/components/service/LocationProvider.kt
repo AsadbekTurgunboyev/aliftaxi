@@ -1,6 +1,7 @@
 package com.example.taxi.components.service
 
 import android.annotation.SuppressLint
+import android.location.Criteria
 import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationListener
@@ -8,6 +9,8 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import org.koin.core.context.GlobalContext
 
@@ -23,9 +26,12 @@ class LocationProvider: LocationListener, GnssStatus.Callback() {
         GlobalContext.get().get<LocationManager>()
     }
 
+
     override fun onLocationChanged(location: Location) {
         if (isValidLocation(location)) {
             locationChangeCallback(location)
+        }else{
+            getLastKnownLocation()
         }
     }
 
@@ -36,13 +42,30 @@ class LocationProvider: LocationListener, GnssStatus.Callback() {
     ) {
         this.locationChangeCallback = locationChangeCallback
         this.gpsSignalCallback = gpsSignalCallback
-
+//        getLastKnownLocation()
         startTime = System.currentTimeMillis()
+        val criteria = Criteria().apply {
+            accuracy = Criteria.ACCURACY_FINE
+            isCostAllowed = true // This allows Android to use data services
+        }
+//        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null)
+//        locationManager.requestLocationUpdates(1000L, 1f, criteria, this, null)
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0F, this)
-        locationManager.registerGnssStatusCallback(
+        val isSuccess = locationManager.registerGnssStatusCallback(
             this,
             Handler(Looper.getMainLooper())
         )
+        Log.d("GPS", "GnssStatus Callback registration successful: $isSuccess")
+    }
+
+    @SuppressLint("MissingPermission")
+    fun getLastKnownLocation() {
+        val locationManager = GlobalContext.get().get<LocationManager>()
+        val lastKnownLocation: Location? = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        if (lastKnownLocation != null) {
+            // Use the last known location
+            locationChangeCallback(lastKnownLocation)
+        }
     }
 
     fun unsubscribe() {
@@ -60,6 +83,7 @@ class LocationProvider: LocationListener, GnssStatus.Callback() {
 
     override fun onSatelliteStatusChanged(status: GnssStatus) {
         super.onSatelliteStatusChanged(status)
+        Log.d("GPS", "Total Satellites: ${status.satelliteCount}")
         status.let { gnsStatus ->
             val totalSatellites = gnsStatus.satelliteCount
             if (totalSatellites > 0) {
@@ -69,7 +93,7 @@ class LocationProvider: LocationListener, GnssStatus.Callback() {
                         satellitesFixed++
                     }
                 }
-
+                Log.d("GPS", "Satellites Fixed: $satellitesFixed")
                 currentGPSStrength = (satellitesFixed * 100) / totalSatellites
                 gpsSignalCallback(currentGPSStrength)
             }
@@ -79,14 +103,16 @@ class LocationProvider: LocationListener, GnssStatus.Callback() {
     private fun isValidLocation(location: Location): Boolean {
 
         if (location.time < startTime) {
-            return false
+             return false
         }
 
         if (currentGPSStrength == 0) {
+//            getLastKnownLocation()
             return false
         }
 
         if (location.accuracy <= 0 || location.accuracy > 20) {
+
             return false
         }
         return true

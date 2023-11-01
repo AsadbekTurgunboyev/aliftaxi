@@ -21,6 +21,7 @@ data class ButtonInfo(
 )
 
 fun setButtonState(buttonInfo: ButtonInfo, isActive: Boolean) {
+
     val colorStateList = ColorStateList.valueOf(
         ContextCompat.getColor(
             buttonInfo.button.context,

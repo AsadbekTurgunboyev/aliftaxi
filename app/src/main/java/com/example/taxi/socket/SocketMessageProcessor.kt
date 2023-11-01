@@ -51,9 +51,6 @@ class SocketMessageProcessor(
     private fun handleSocketMessage(socketMessage: SocketMessage<*>, message: String) {
         val status = socketMessage.status
         val key = socketMessage.key
-        Log.d("xabar", "handleSocketMessage: $message")
-        Log.d("WebSocket", "Order $message}")
-        Log.d("WebSocket", "Order ${socketMessage.data}}")
 
         val type = Types.newParameterizedType(
             SocketMessage::class.java,
@@ -72,15 +69,13 @@ class SocketMessageProcessor(
                     val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
                     intent.putExtra("OrderData_new", message)
                     activity.sendBroadcast(intent)
-//                    val adapter: JsonAdapter<SocketMessage<SocketOnlyForYouData>> = moshi.adapter(type)
-//
-//                    val orderData = adapter.fromJson(message)
-//                    Log.d("WebSocket", "handleSocketMessage: new $orderData" )
-//                    orderData?.let {
-//                        orderViewModel.addItem(orderItem = it.data.toOrderData())
-//                    }
-
                 }
+                SocketConfig.ORDER_UPDATE ->{
+                    val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
+                    intent.putExtra("orderData_update", message)
+                    activity.sendBroadcast(intent)
+                }
+
                 SocketConfig.ORDER_CANCELLED -> {
                     val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
                     val adapter: JsonAdapter<SocketMessage<SocketOrderCancelledData>> =
@@ -113,6 +108,7 @@ class SocketMessageProcessor(
                     activity.sendBroadcast(intent)
 
                 }
+
 
             }
         }

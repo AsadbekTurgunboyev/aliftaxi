@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.taxi.R
 import com.example.taxi.domain.exception.traceErrorException
+import com.example.taxi.domain.model.BonusResponse
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.OrderCompleteRequest
@@ -30,6 +31,10 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
         value = DriveAction.ACCEPT
     }
 
+
+    private val _transferWithBonus = MutableLiveData<Resource<MainResponse<BonusResponse>>>()
+    val transferWithBonus: LiveData<Resource<MainResponse<BonusResponse>>> get() = _transferWithBonus
+
     private var _acceptWithTaximeter = MutableLiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>>()
     val acceptWithTaximeter:LiveData<Event<Resource<MainResponse<OrderAccept<UserModel>>>>> get() = _acceptWithTaximeter
 
@@ -44,6 +49,56 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
 
     private var _completeOrderLostNetwork = MutableLiveData<Resource<MainResponse<Any>>>()
     val completeOrderLostNetwork: LiveData<Resource<MainResponse<Any>>> get() = _completeOrderLostNetwork
+
+    private var _confirmationCode = MutableLiveData<Resource<MainResponse<Any>>>()
+    val confirmationCode :LiveData<Resource<MainResponse<Any>>> get() = _confirmationCode
+
+    fun confirmBonusPassword(orderHistoryId: Int, code: Int){
+        _confirmationCode.postValue(Resource(ResourceState.LOADING))
+        compositeDisposable.add(mainResponseUseCase.confirmBonusPassword(orderHistoryId,code).subscribeOn(Schedulers.io())
+            .doOnSubscribe {  }
+            .doOnTerminate{}
+            .subscribe({ response ->
+                _confirmationCode.postValue(Resource(ResourceState.SUCCESS,response))
+            },{error ->
+                val errorMessage = if (error is HttpException) {
+                    try {
+                        val errorBody = error.response()?.errorBody()?.string()
+                        val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                        mainResponse.message
+                    } catch (e: Exception) {
+                        "An error occurred"
+                    }
+                } else {
+                    "An error occurred"
+                }
+                _confirmationCode.postValue(Resource(ResourceState.ERROR, message = errorMessage))
+            }))
+    }
+
+    fun transferWithBonus(order_id: Int, money: Int){
+        _transferWithBonus.postValue(Resource(ResourceState.LOADING))
+        compositeDisposable.add(mainResponseUseCase.transferWithBonus(order_id,money).subscribeOn(Schedulers.io())
+            .doOnSubscribe {  }
+            .doOnTerminate{}
+            .subscribe({ response ->
+                _transferWithBonus.postValue(Resource(ResourceState.SUCCESS,response))
+            },{error ->
+                val errorMessage = if (error is HttpException) {
+                    try {
+                        val errorBody = error.response()?.errorBody()?.string()
+                        val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                        mainResponse.message
+                    } catch (e: Exception) {
+                        "An error occurred"
+                    }
+                } else {
+                    "An error occurred"
+                }
+                _transferWithBonus.postValue(Resource(ResourceState.ERROR, message = errorMessage))
+            }))
+
+    }
 
     fun arriveOrder() {
         _arriveOrder.postValue(Resource(ResourceState.LOADING))
@@ -175,6 +230,31 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
                         message = traceErrorException(error).getErrorMessage()
                     )
                 )
+
+            })
+        )
+    }
+
+
+
+    fun completeOrderForBonus(orderCompleteRequest: OrderCompleteRequest) {
+        compositeDisposable.add(mainResponseUseCase.completeOrder(orderCompleteRequest)
+            .subscribeOn(Schedulers.io())
+            .doOnSubscribe {
+                // Perform any setup tasks before the subscription starts
+            }.doOnTerminate {}.subscribe({ response ->
+                Log.d("driverxatolik", "completeOrderForBonus: ")
+//                _completeOrder.postValue(Resource(ResourceState.SUCCESS, response))
+
+            }, {error ->
+                Log.d("driverxatolik", "completeOrderForBonus:x $error")
+
+//                _completeOrder.postValue(
+//                    Resource(
+//                        ResourceState.ERROR,
+//                        message = traceErrorException(error).getErrorMessage()
+//                    )
+//                )
 
             })
         )

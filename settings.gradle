@@ -33,3 +33,4 @@ dependencyResolutionManagement {
 rootProject.name = "Taxi"
 include ':app'
 include ':app'
+include ':soundModule'

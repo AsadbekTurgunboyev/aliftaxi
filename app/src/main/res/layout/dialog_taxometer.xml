@@ -17,7 +17,6 @@
 
         <LinearLayout
             android:id="@+id/header_peek"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -39,6 +38,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+
                 android:layout_gravity="center_vertical"
                 android:layout_marginTop="@dimen/_10sdp"
                 android:orientation="vertical"
@@ -71,11 +71,24 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:gravity="center"
-                            android:visibility="gone"
                             android:text="00:00"
+                            android:visibility="gone"
                             android:textAppearance="@style/TextAppearance.AppCompat.Large"
                             android:textColor="@color/text_black_white"
                             android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/progressTimeTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:text="00:00"
+                            android:visibility="gone"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                            android:textColor="@color/text_black_white"
+                            android:textStyle="bold" />
+
                     </FrameLayout>
                 </LinearLayout>
 
@@ -103,23 +116,23 @@
                 android:paddingBottom="@dimen/_5sdp">
 
 
-
-
                 <LinearLayout
                     android:id="@+id/linearLayoutWitPause"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:visibility="gone"
                     android:layout_gravity="clip_vertical"
                     android:layout_marginTop="@dimen/_5sdp"
                     android:gravity="center_vertical"
                     android:orientation="vertical"
                     android:paddingVertical="@dimen/_5sdp"
-                    android:visibility="gone">
+                    >
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/_5sdp"
+                        android:visibility="gone"
                         android:orientation="horizontal">
 
                         <LinearLayout

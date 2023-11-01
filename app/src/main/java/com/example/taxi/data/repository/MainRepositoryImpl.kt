@@ -1,14 +1,20 @@
 package com.example.taxi.data.repository
 
 import com.example.taxi.data.source.ApiService
+import com.example.taxi.domain.model.BonusResponse
 import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
 import com.example.taxi.domain.model.balance.BalanceData
 import com.example.taxi.domain.model.checkAccess.AccessModel
-import com.example.taxi.domain.model.history.*
+import com.example.taxi.domain.model.history.HistoryDataResponse
+import com.example.taxi.domain.model.history.Meta
 import com.example.taxi.domain.model.location.LocationRequest
-import com.example.taxi.domain.model.order.*
+import com.example.taxi.domain.model.order.Address
+import com.example.taxi.domain.model.order.OrderAccept
+import com.example.taxi.domain.model.order.OrderCompleteRequest
+import com.example.taxi.domain.model.order.OrderData
+import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.model.selfie.SelfieAllData
 import com.example.taxi.domain.model.selfie.StatusModel
 import com.example.taxi.domain.model.settings.SettingsData
@@ -31,7 +37,7 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
         return apiService.getService()
     }
 
-    override fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel,StatusModel>>> {
+    override fun getDriverAllData(): Observable<MainResponse<SelfieAllData<IsCompletedModel, StatusModel>>> {
         return apiService.getDriverAllData()
     }
 
@@ -91,15 +97,32 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
         return apiService.getDriverById(driver_id = driver_id)
     }
 
-    override fun getHistory(page: Int,from: String?, to: String?, type: Int?, status: Int?): Observable<HistoryDataResponse<Meta>> {
-        return apiService.getHistory(page = page,from = from, to = to, type = type, status = status)
+    override fun getHistory(
+        page: Int,
+        from: String?,
+        to: String?,
+        type: Int?,
+        status: Int?
+    ): Observable<HistoryDataResponse<Meta>> {
+        return apiService.getHistory(
+            page = page,
+            from = from,
+            to = to,
+            type = type,
+            status = status
+        )
     }
 
     override fun transferMoney(request: TransferRequest): Observable<MainResponse<Any>> {
         return apiService.transferMoney(request = request)
     }
 
-    override fun getTransferHistory(page: Int, from: String?, to: String?, type: Int?): Observable<ResponseTransferHistory<HistoryMeta>> {
+    override fun getTransferHistory(
+        page: Int,
+        from: String?,
+        to: String?,
+        type: Int?
+    ): Observable<ResponseTransferHistory<HistoryMeta>> {
         return apiService.getTransferHistory(page = page, from = from, to = to, type = type)
     }
 
@@ -113,6 +136,20 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
 
     override fun getCurrentOrder(): Observable<MainResponse<Any>> {
         return apiService.getOrderCurrent()
+    }
+
+    override fun transferWithBonus(
+        order_id: Int,
+        money: Int
+    ): Observable<MainResponse<BonusResponse>> {
+        return apiService.getTransferBonus(order_id, money)
+    }
+
+    override fun confirmBonusPassword(
+        orderHistoryId: Int,
+        code: Int
+    ): Observable<MainResponse<Any>> {
+        return apiService.confirmBonusPassword(orderHistoryId,code)
     }
 
 

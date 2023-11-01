@@ -1,5 +1,6 @@
 package com.example.taxi.data.source
 
+import com.example.taxi.domain.model.BonusResponse
 import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
@@ -111,8 +112,7 @@ interface ApiService {
         @Query("to") to: String? = null,
         @Query("type") type: Int? = null,
         @Query("status") status: Int? = null
-    ):
-            Observable<HistoryDataResponse<Meta>>
+    ): Observable<HistoryDataResponse<Meta>>
 
     @POST("location/send")
     fun sendLocation(@Body request: LocationRequest): Observable<MainResponse<Any>>
@@ -125,8 +125,10 @@ interface ApiService {
 
     @GET("balance/index")
     fun getTransferHistory(
-        @Query("page") page: Int, @Query("from") from: String? = null,
-        @Query("to") to: String? = null, @Query("type") type: Int? = null
+        @Query("page") page: Int,
+        @Query("from") from: String? = null,
+        @Query("to") to: String? = null,
+        @Query("type") type: Int? = null
     ): Observable<ResponseTransferHistory<HistoryMeta>>
 
     @GET("data/about")
@@ -137,4 +139,16 @@ interface ApiService {
 
     @GET("order/current")
     fun getOrderCurrent(): Observable<MainResponse<Any>>
+
+    @GET("bonus/transfer")
+    fun getTransferBonus(
+        @Query("order_id") orderId: Int,
+        @Query("money") money: Int
+    ): Observable<MainResponse<BonusResponse>>
+
+    @POST("bonus/confirm")
+    fun confirmBonusPassword(
+        @Query("order_history_id") orderHistoryId: Int,
+        @Query("code") code: Int
+    ): Observable<MainResponse<Any>>
 }

@@ -5,11 +5,13 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.DialogFragment
 import com.example.taxi.R
 import com.example.taxi.databinding.DialogFinishOrderBinding
 import com.example.taxi.domain.location.LocationPoint
+import com.example.taxi.domain.model.BonusResponse
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.order.OrderCompleteRequest
 import com.example.taxi.domain.preference.UserPreferenceManager
@@ -26,6 +28,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
     private val preferenceManager: UserPreferenceManager by inject()
 
     var farCenterDistance = 0.0
+    var order_history_id = 0
 
     lateinit var viewBinding: DialogFinishOrderBinding
 
@@ -35,6 +38,8 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         savedInstanceState: Bundle?
     ): View {
         viewBinding = DialogFinishOrderBinding.inflate(layoutInflater, container, false)
+
+        viewBinding.payWithBonus.visibility = if(preferenceManager.getStatusIsTaximeter()) View.GONE else View.VISIBLE
         return viewBinding.root
     }
 
@@ -66,12 +71,109 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         viewModel.getDriveAnalyticsLiveData().observe(viewLifecycleOwner) {
             renderAnalyticsReportData(it)
         }
+        driverViewModel.transferWithBonus.observe(viewLifecycleOwner){
+            transferUi(it)
+        }
 
-//        driverViewModel.completeOrder.observe(viewLifecycleOwner) { resource ->
-//            completeUi(resource)
-//
-//        }
 
+        viewBinding.backShowPriceButton.setOnClickListener {
+            backFromBonusUi()
+        }
+
+        driverViewModel.confirmationCode.observe(viewLifecycleOwner){
+            confirmBonusUi(it)
+        }
+        viewBinding.payButton.setOnClickListener {
+            val money = viewBinding.editPrice.text.toString().toInt()
+            driverViewModel.transferWithBonus(preferenceManager.getOrderId(),money)
+
+        }
+        viewBinding.passwordButton.setOnClickListener {
+            if (viewBinding.pinView.text?.isEmpty() == true){
+                Toast.makeText(requireContext(), "Tasdiqlash kodini kiriting", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            driverViewModel.confirmBonusPassword(order_history_id,viewBinding.pinView.text.toString().toInt())
+        }
+
+
+    }
+
+    private fun confirmBonusUi(resource: Resource<MainResponse<Any>>?) {
+       resource?.let {
+           when(resource.state){
+               ResourceState.ERROR ->{}
+               ResourceState.SUCCESS ->{
+                   driverViewModel.completedOrder()
+                   viewModel.deleteDrive(driveId = raceId)
+                   preferenceManager.timeClear()
+                   navigateToDashboardFragment()
+               }
+               ResourceState.LOADING ->{}
+           }
+       }
+
+    }
+
+    private fun transferUi(resource: Resource<MainResponse<BonusResponse>>?) {
+        resource?.let {
+            when(it.state){
+                ResourceState.LOADING ->{
+                    viewBinding.moneyForBonusLayout.isErrorEnabled = false
+
+                }
+                ResourceState.SUCCESS ->{
+                    viewBinding.moneyForBonusLayout.isErrorEnabled = false
+                    order_history_id = it.data?.data?.order_history_id!!
+                    showPasswordUi()
+
+                }
+                ResourceState.ERROR ->{
+                    viewBinding.moneyForBonusLayout.error = it.message
+                }
+            }
+        }
+    }
+
+    private fun showPasswordUi() {
+        with(viewBinding){
+            passwordLiner.visibility = View.VISIBLE
+            starting.visibility = View.GONE
+            bonusLiner.visibility = View.GONE
+            passwordButton.visibility = View.VISIBLE
+            finishButtonDialog.visibility = View.GONE
+            payButton.visibility = View.GONE
+
+
+        }
+
+    }
+
+    private fun backFromBonusUi() {
+        with(viewBinding) {
+            backShowPriceButton.visibility = View.GONE
+            moneyForBonusTextView.visibility = View.GONE
+            titleFinishDialog.text = getString(R.string.yetib_keldingiz)
+            payButton.visibility = View.GONE
+            finishButtonDialog.visibility = View.VISIBLE
+            passwordButton.visibility = View.GONE
+            bonusLiner.visibility = View.GONE
+            passwordLiner.visibility = View.GONE
+            starting.visibility = View.VISIBLE
+        }
+    }
+
+    private fun showBonusUi() {
+        with(viewBinding) {
+            backShowPriceButton.visibility = View.VISIBLE
+            moneyForBonusTextView.visibility = View.VISIBLE
+            finishButtonDialog.visibility = View.GONE
+            payButton.visibility = View.VISIBLE
+            passwordButton.visibility = View.GONE
+            bonusLiner.visibility = View.VISIBLE
+            titleFinishDialog.text = getString(R.string.bonus_orqali_to_lov)
+            starting.visibility = View.GONE
+        }
     }
 
     private fun totalPathDistance(points: List<LocationPoint>): Double {
@@ -173,14 +275,23 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
                 wait_cost = moneyWithTime
             )
 
+        preferenceManager.saveLastRace(order, 1)
 
+        viewBinding.payWithBonus.setOnClickListener {
+            driverViewModel.completeOrderForBonus(
+                order
+            )
+            showBonusUi()
+        }
 
 
         viewBinding.priceWait.text =
             PhoneNumberUtil.formatMoneyNumberPlate(moneyWithTime.toString())
 
         viewBinding.priceAll.text = PhoneNumberUtil.formatMoneyNumberPlate(allPrice.toString())
-
+        viewBinding.moneyForBonusTextView.text =
+            PhoneNumberUtil.formatMoneyNumberPlate(allPrice.toString())
+        viewBinding.editPrice.setText(allPrice.toString())
         viewBinding.finishButtonDialog.setOnClickListener {
             driverViewModel.completeOrder(
                 order
@@ -190,17 +301,15 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         driverViewModel.completeOrder.observe(viewLifecycleOwner) {
             when (it.state) {
                 ResourceState.ERROR -> {
-                    preferenceManager.saveLastRace(order,1)
-
+                    preferenceManager.saveLastRace(order, 1)
                     viewModel.deleteDrive(driveId = raceId)
                     preferenceManager.timeClear()
                     viewBinding.finishButtonDialog.stopAnimation()
                     navigateToDashboardFragment()
-
                 }
 
                 ResourceState.SUCCESS -> {
-                    preferenceManager.saveLastRace(order,-1)
+                    preferenceManager.saveLastRace(order, -1)
 
                     viewBinding.finishButtonDialog.stopAnimation()
 
@@ -224,6 +333,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         super.onDestroy()
         viewBinding.finishButtonDialog.dispose()
     }
+
     private fun navigateToDashboardFragment() {
         activity?.let { currentActivity ->
             val intent = currentActivity.intent
@@ -232,6 +342,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
                 android.R.anim.fade_in,
                 android.R.anim.fade_out
             )
+            preferenceManager.saveStatusIsTaximeter(false)
             startActivity(intent)
             currentActivity.overridePendingTransition(
                 android.R.anim.fade_in,

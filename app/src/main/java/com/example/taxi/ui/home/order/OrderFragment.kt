@@ -206,7 +206,6 @@ class OrderFragment : Fragment(), BottomSheetInterface {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (dialog == null) {
-
             setDialog()
         }
 

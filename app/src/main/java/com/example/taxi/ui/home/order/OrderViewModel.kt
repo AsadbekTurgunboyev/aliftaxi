@@ -1,7 +1,6 @@
 package com.example.taxi.ui.home.order
 
 import android.util.Log
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
@@ -61,10 +60,10 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
         MutableLiveData<Resource<MainResponse<List<OrderData<Address>>>>>()
 
     fun addItem(orderItem: OrderData<Address>) {
-        Log.d("itemuchun", "addItem: $orderItem")
         _orderItems.postValue(orderItem)
 //        _orderItems.value = orderItem
     }
+
 
     fun removeItem(orderId: Int) {
         Log.d("itemuchun", "removeItem: $orderId")
@@ -153,12 +152,14 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
                         is HttpException -> {
                             try {
                                 val errorBody = error.response()?.errorBody()?.string()
-                                val mainResponse = Gson().fromJson(errorBody, MainResponse::class.java)
+                                val mainResponse =
+                                    Gson().fromJson(errorBody, MainResponse::class.java)
                                 mainResponse.message
                             } catch (e: Exception) {
                                 R.string.cannot_connect_to_server
                             }
                         }
+
                         is IOException -> R.string.no_internet
                         else -> R.string.unknow_error
                     }
@@ -227,5 +228,27 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
     public override fun onCleared() {
         compositeDisposable.dispose()
         super.onCleared()
+    }
+
+    fun updateItem(updateItem: OrderData<Address>) {
+        val existingResponse = _orderResponse.value
+        if (existingResponse != null && existingResponse.state == ResourceState.SUCCESS) {
+            val currentData = existingResponse.data?.data?.toMutableList()
+            if (currentData != null) {
+                var indexToUpdate = -1
+                for (i in 0 until currentData.size) {
+                    if (currentData[i].id == updateItem.id) {
+                        indexToUpdate = i
+                        break
+                    }
+                }
+                if (indexToUpdate != -1) {
+                    currentData[indexToUpdate] = updateItem
+                    val newData = existingResponse.data
+                    newData.data = currentData
+                    _orderResponse.postValue(Resource(ResourceState.SUCCESS, newData))
+                }
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -25,6 +26,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
+import com.example.soundmodule.SoundManager
 import com.example.taxi.R
 import com.example.taxi.databinding.FragmentDriverBinding
 import com.example.taxi.dbModels.TimerViewModel
@@ -35,6 +37,7 @@ import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.preference.UserPreferenceManager
+import com.example.taxi.domain.preference.UserPreferenceManager.Companion.START_COST
 import com.example.taxi.network.NO_CONNECT
 import com.example.taxi.network.NetworkReceiver
 import com.example.taxi.network.NetworkViewModel
@@ -86,6 +89,8 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
     }
 
+
+    lateinit var soundManager: SoundManager
     private lateinit var locationTracker: LocationTracker
     private val networkViewModel: NetworkViewModel by viewModel()
     private lateinit var networkReceiver: NetworkReceiver
@@ -154,11 +159,22 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     private val mapboxReplayer = MapboxReplayer()
 
     private val replayProgressObserver = ReplayProgressObserver(mapboxReplayer)
-//    private lateinit var mapboxNavigation: MapboxNavigation
+
+    //    private lateinit var mapboxNavigation: MapboxNavigation
 //    private lateinit var navigationCamera: NavigationCamera
 //    private lateinit var viewportDataSource: MapboxNavigationViewportDataSource
+    private lateinit var prefs: SharedPreferences
+    private val preferenceChangeListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences, key ->
+            if (key == START_COST) {
+                // Do something when START_COST changes
+                val newStartCost = sharedPreferences.getInt(START_COST, 0)
+                val a =
+                    PhoneNumberUtil.formatMoneyNumberPlate(newStartCost.toString())
+                viewBinding.bottomDialog.priceTextViewDialog.text = a
 
-
+            }
+        }
     private val pixelDensity = Resources.getSystem().displayMetrics.density
     private val overviewPadding: EdgeInsets by lazy {
         EdgeInsets(
@@ -313,12 +329,18 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     private var isRouteFetched = false
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        prefs = preferenceManager.getSharedPreferences()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
 
         viewBinding = FragmentDriverBinding.inflate(inflater, container, false)
+        preferenceManager.saveStatusIsTaximeter(false)
 
         networkReceiver = NetworkReceiver { isConnected ->
             if (isConnected) {
@@ -358,7 +380,8 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("zakaz", "onViewCreated: bu driver")
+
+        soundManager = SoundManager(requireContext())
 //        viewModel = ViewModelProvider(this)[TimerViewModel::class.java]
 //        viewModel.timeLiveData.observe(viewLifecycleOwner) { (time, message) ->
 //            updateUITime(time, message)
@@ -404,6 +427,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         viewBinding.callDispetcher.setOnClickListener {
             ButtonUtils.callToDispatcher(requireActivity())
         }
+
         homeViewModel.dashboardLiveData.observe(viewLifecycleOwner) {
             setDashboardStatus(it)
         }
@@ -589,9 +613,9 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         val style =
             if ((resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
 //                NavigationStyles.NAVIGATION_NIGHT_STYLE
-                Style.DARK
+                Style.TRAFFIC_NIGHT
             } else {
-                Style.LIGHT
+                Style.TRAFFIC_DAY
 
 //                NavigationStyles.NAVIGATION_DAY_STYLE
             }
@@ -734,7 +758,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     private fun setFinishDialog() {
         Log.d("dialoguchun", "setFinishDialog: ")
         val dialog = Dialog(requireContext())
-         homeViewModel.startDrive()
+        homeViewModel.startDrive()
 
         dialog.setContentView(R.layout.dialog_ask_finish)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -1062,7 +1086,8 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 //    }
 
     private fun findRoute(origin: Point, destination: Point) {
-        val uri = Uri.parse("google.navigation:q=${preferenceManager.getDestinationLat()},${preferenceManager.getDestinationLong()}")
+        val uri =
+            Uri.parse("google.navigation:q=${preferenceManager.getDestinationLat()},${preferenceManager.getDestinationLong()}")
 
         // Create an Intent from uri. Set the action to ACTION_VIEW
         val mapIntent = Intent(Intent.ACTION_VIEW, uri)
@@ -1207,6 +1232,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
     override fun onResume() {
         super.onResume()
+        prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
         if (timerManager == null && preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.STARTED) {
             timerManager = TimerManager(requireContext()) { time, state ->
                 updateUITime(time, state)
@@ -1214,6 +1240,11 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         }
 //        timerManager?.updateCallback = ::updateUITime
 
+    }
+
+    override fun onPause() {
+        super.onPause()
+        prefs.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
     }
 
     override fun onDestroyView() {
@@ -1304,7 +1335,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
             when (response.state) {
                 ResourceState.SUCCESS -> {
                     preferenceManager.saveLastRaceId(-1)
-
+                    soundManager.playSoundJourneyBeginWithBelt()
                     viewBinding.bottomDialog.swipeButton.isChecked = false
                     driverViewModel.startedOrder()
                     if (LocationPermissionUtils.isBasicPermissionGranted(requireContext())

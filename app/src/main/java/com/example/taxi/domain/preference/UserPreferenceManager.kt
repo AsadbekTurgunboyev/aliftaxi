@@ -1,6 +1,7 @@
 package com.example.taxi.domain.preference
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.preference.PreferenceManager
 import com.example.taxi.domain.location.LocationPoint
@@ -46,10 +47,14 @@ class UserPreferenceManager(private val context: Context) {
         const val LAST_RACE_WAIT_TIME = "last_race_wait_time"
         private const val KEY_TOGGLE_STATE = "ToggleState"
         const val IS_TAXIMETER = "is_taximeter"
+        const val ORDER_ID = "order_id"
 
 
     }
 
+    fun saveStartCostUpdate(start_cost: Int){
+        prefs.edit().putInt(START_COST, start_cost).apply()
+    }
     fun savePriceSettings(order: OrderAccept<UserModel>) {
 
         Log.d("narx", "savePriceSettings: ichkarida ${order.start_cost}")
@@ -67,6 +72,7 @@ class UserPreferenceManager(private val context: Context) {
             putString(DESTINATION1, order.address.from)
             putString(DESTINATION1_LONG,order.longitude1)
             putString(DESTINATION1_LAT,order.latitude1)
+            putInt(ORDER_ID,order.id)
             putInt(COST_WAIT_TIME_PER_MINUTE, order.getCostMinWaitTimePerMinute())
             putString(DESTINATION2, order.address.to)
         }.apply()
@@ -75,6 +81,7 @@ class UserPreferenceManager(private val context: Context) {
     fun saveStatusIsTaximeter(isOn: Boolean){
         prefs.edit().putBoolean(IS_TAXIMETER, isOn).apply()
     }
+    fun getOrderId() = prefs.getInt(ORDER_ID,0)
 
     fun getStatusIsTaximeter(): Boolean = prefs.getBoolean(IS_TAXIMETER,false)
 
@@ -141,6 +148,9 @@ class UserPreferenceManager(private val context: Context) {
 
     fun getMinDistance(): Int = prefs.getInt(MIN_DISTANCE, 0)
 
+    fun getSharedPreferences(): SharedPreferences {
+        return prefs
+    }
     fun getStartCost(): Int = prefs.getInt(START_COST, 0)
 
     fun getMinWaitTime(): Int = prefs.getInt(MIN_WAIT_TIME, 0)

@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.example.soundmodule.SoundManager
 import com.example.taxi.R
 import com.example.taxi.databinding.FragmentDashboardBinding
 import com.example.taxi.di.MAIN_URL
@@ -57,6 +58,7 @@ class DashboardFragment : Fragment() {
 
     private lateinit var viewBinding: FragmentDashboardBinding
     private var isViewCreated = false
+    private lateinit var soundManager: SoundManager
     private lateinit var networkReceiver: NetworkReceiver
 
     val navController by lazy {
@@ -153,7 +155,7 @@ class DashboardFragment : Fragment() {
     @SuppressLint("InflateParams", "SetTextI18n")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        soundManager = SoundManager(requireContext())
         getAllData()
         viewBinding.refresh.setOnRefreshListener {
             getAllData()
@@ -412,8 +414,6 @@ class DashboardFragment : Fragment() {
             }
 
             ResourceState.ERROR -> {
-                Log.d(TAG, "completeOrderUi: ${data.message}")
-                Toast.makeText(context, "${data.message}", Toast.LENGTH_SHORT).show()
                 if (data.message == "400") {
                     userPreferenceManager.saveLastRaceId(-1)
                     viewBinding.buttonOrder.isEnabled = true
@@ -644,6 +644,7 @@ class DashboardFragment : Fragment() {
 
 
         viewBinding.isReadyForWork.setOnToggledListener { _, isOn ->
+
             userPreferenceManager.saveToggleState(isOn)
             val intent = Intent(requireActivity(), SocketService::class.java).apply {
                 putExtra("TOKEN", userPreferenceManager.getToken())
@@ -656,7 +657,7 @@ class DashboardFragment : Fragment() {
             }
 
             if (isOn) {
-
+                soundManager.playSoundYouAreOnline()
                 Intent(requireActivity(), SocketService::class.java).also { intent ->
                     intent.putExtra("TOKEN", userPreferenceManager.getToken())
                     intent.putExtra("IS_READY_FOR_WORK", true)
@@ -667,6 +668,7 @@ class DashboardFragment : Fragment() {
                     }
                 }
             } else {
+                soundManager.playSoundYouAreOffline()
                 Intent(requireActivity(), SocketService::class.java).also { intent ->
                     intent.putExtra("IS_READY_FOR_WORK", false)
                     requireContext().startService(intent)

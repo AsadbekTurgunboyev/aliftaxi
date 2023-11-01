@@ -11,7 +11,7 @@ private const val INTERNAL_SERVER_ERROR_MESSAGE = "Internal Server error!"
 private const val NO_CONNECTION_ERROR_MESSAGE = "No Connection!"
 private const val TIMEOUT_ERROR_MESSAGE = "Time Out!"
 const val UNKNOWN_ERROR_MESSAGE = "Unknown Error!"
-const val  NO_ACTIVE = "Haydovchi faol emas!"
+
 
 
 data class ApiError(val message: String?, val code: Int?, var errorStatus: ErrorStatus){

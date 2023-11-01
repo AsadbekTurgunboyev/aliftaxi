@@ -1,5 +1,6 @@
 package com.example.taxi.domain.repository
 
+import com.example.taxi.domain.model.BonusResponse
 import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.about.ResponseAbout
@@ -44,7 +45,7 @@ interface MainRepository {
 
     fun orderAccept(id: Int): Observable<MainResponse<OrderAccept<UserModel>>>
 
-    fun orderWithTaximeter():Observable<MainResponse<OrderAccept<UserModel>>>
+    fun orderWithTaximeter(): Observable<MainResponse<OrderAccept<UserModel>>>
 
     fun arrivedOrder(): Observable<MainResponse<Any>>
 
@@ -80,4 +81,8 @@ interface MainRepository {
     fun getAbout(): Observable<MainResponse<ResponseAbout>>
     fun getFAQ(): Observable<MainResponse<ResponseAbout>>
     fun getCurrentOrder(): Observable<MainResponse<Any>>
+
+    fun transferWithBonus(order_id: Int, money: Int): Observable<MainResponse<BonusResponse>>
+
+    fun confirmBonusPassword(orderHistoryId: Int, code: Int): Observable<MainResponse<Any>>
 }

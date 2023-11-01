@@ -8,3 +8,7 @@ data class MainResponse<T>(
     val step: Int,
     var data: T
 )
+
+data class BonusResponse(
+    val order_history_id: Int
+)

@@ -3,11 +3,20 @@ package com.example.taxi.ui.home
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.PictureInPictureParams
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.IBinder
+import android.os.Messenger
+import android.os.PersistableBundle
 import android.provider.Settings
 import android.util.Log
 import android.util.Rational
@@ -23,7 +32,6 @@ import com.example.taxi.components.service.DriveBackGroundService
 import com.example.taxi.components.service.KillStateDialogService
 import com.example.taxi.databinding.ActivityHomeBinding
 import com.example.taxi.domain.model.DashboardData
-import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.socket.SocketMessage
 import com.example.taxi.domain.model.socket.SocketOnlyForYouData
 import com.example.taxi.domain.model.socket.toOrderData
@@ -38,8 +46,6 @@ import com.example.taxi.ui.home.driver.driveReport.DriveFinishDialog
 import com.example.taxi.ui.home.driver.driveReport.DriveReportViewModel
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.example.taxi.utils.DialogUtils
-import com.example.taxi.utils.Resource
-import com.example.taxi.utils.ResourceState
 import com.example.taxi.utils.ViewUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
@@ -71,10 +77,10 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
     lateinit var viewBinding: ActivityHomeBinding
 
 
-
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val message = intent.getStringExtra("OrderData_new")
+            val messageUpdate = intent.getStringExtra("orderData_update")
             val id = intent.getIntExtra("OrderData_canceled", -1)
             val driverId = intent.getIntExtra("driver_id", -1)
 
@@ -86,7 +92,6 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
                 viewModel.stopDrive()
                 userPreferenceManager.clearPassengerPhone()
                 userPreferenceManager.timeClear()
-
                 userPreferenceManager.setIsOrderCancel(true)
                 navigateToDashboardActivity()
             }
@@ -101,8 +106,17 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
             val adapter: JsonAdapter<SocketMessage<SocketOnlyForYouData>> = moshi.adapter(type)
 
             val orderData = message?.let { adapter.fromJson(it) }
+            val orderDataUpdate = messageUpdate?.let { adapter.fromJson(it) }
             orderData?.let {
                 orderViewModel.addItem(orderItem = it.data.toOrderData())
+            }
+
+            orderDataUpdate?.let {
+                if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED && orderDataUpdate.data.id == userPreferenceManager.getOrderId()) {
+                    userPreferenceManager.saveStartCostUpdate(it.data.startCost)
+                } else {
+                    orderViewModel.updateItem(updateItem = it.data.toOrderData())
+                }
             }
             // Do something with the orderData
         }
@@ -168,10 +182,12 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
                     activityMessenger.startDrive()
                     viewBinding.root.keepScreenOn = true
                 }
+
                 PAUSE -> {
                     activityMessenger.pauseDrive()
                     viewBinding.root.keepScreenOn = false
                 }
+
                 STOP -> {
                     activityMessenger.stopDrive()
                     viewBinding.root.keepScreenOn = false
@@ -260,21 +276,30 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
             Intent(this, DriveBackGroundService::class.java), this, Context.BIND_AUTO_CREATE
         )
         val currentDestinationId = navController.currentDestination?.id
-        if (userPreferenceManager.getStatusIsTaximeter()){
+        if (userPreferenceManager.getStatusIsTaximeter()) {
             if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
                 when (userPreferenceManager.getDriverStatus()) {
                     UserPreferenceManager.DriverStatus.STARTED -> {
+                        Log.d("taxometer", "onStart: start")
                         driverViewModel.startedOrder()
                         Log.d("xatolik", "onStart:start ishladi ")
                     }
+                    UserPreferenceManager.DriverStatus.ARRIVED ->{
+                        driverViewModel.arrivedOrder()
+                        Log.d("taxometer", "onStart: arrive")
 
-                    UserPreferenceManager.DriverStatus.ARRIVED -> driverViewModel.arrivedOrder()
-                    UserPreferenceManager.DriverStatus.ACCEPTED -> driverViewModel.acceptedOrder()
+                    }
+                    UserPreferenceManager.DriverStatus.ACCEPTED ->{
+                        driverViewModel.acceptedOrder()
+                        Log.d("taxometer", "onStart: accept")
+
+                    }
+
                     else -> {}
                 }
                 navController.navigate(R.id.taximeterFragment)
             }
-        }else {
+        } else {
             if (currentDestinationId != R.id.driverFragment) {
                 if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
                     when (userPreferenceManager.getDriverStatus()) {
