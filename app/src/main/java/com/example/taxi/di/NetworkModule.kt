@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit
 
 
 private const val TIME_OUT = 30L
-const val BASE_URL: String = "https://aliftaxi.uz/api/driver/"
-const val MAIN_URL: String = "https://aliftaxi.uz"
+const val BASE_URL: String = "https://lidertaxi.uz/api/driver/"
+const val MAIN_URL: String = "https://lidertaxi.uz"
 val NetworkModule = module {
 
     single { createService(get()) }

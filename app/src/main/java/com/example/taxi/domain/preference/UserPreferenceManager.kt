@@ -32,7 +32,9 @@ class UserPreferenceManager(private val context: Context) {
         const val PASSENGER_COMMENT = "passenger_comment"
         const val DESTINATION1 = "destination_1"
         const val DESTINATION1_LONG = "destination_1_long"
+        const val DESTINATION2_LONG = "destination_2_long"
         const val DESTINATION1_LAT = "destination_1_lat"
+        const val DESTINATION2_LAT = "destination_2_lat"
         const val DESTINATION2 = "destination_2"
         const val DRIVER_STATUS = "driver_status"
         const val CENTER_RADIUS = "center_radius"
@@ -71,7 +73,9 @@ class UserPreferenceManager(private val context: Context) {
             putString(PASSENGER_NAME, order.user.name)
             putString(DESTINATION1, order.address.from)
             putString(DESTINATION1_LONG,order.longitude1)
+            putString(DESTINATION2_LONG,order.longitude2)
             putString(DESTINATION1_LAT,order.latitude1)
+            putString(DESTINATION2_LAT,order.latitude2)
             putInt(ORDER_ID,order.id)
             putInt(COST_WAIT_TIME_PER_MINUTE, order.getCostMinWaitTimePerMinute())
             putString(DESTINATION2, order.address.to)
@@ -134,9 +138,11 @@ class UserPreferenceManager(private val context: Context) {
 
     fun getPassengerComment(): String? = prefs.getString(PASSENGER_COMMENT, "-")
 
-    fun getDestinationLong(): String? = prefs.getString(DESTINATION1_LONG, "0.0")
+    fun getDestination1Long(): String? = prefs.getString(DESTINATION1_LONG, "0.0")
+    fun getDestination2Long(): String? = prefs.getString(DESTINATION2_LONG, "0.0")
 
-    fun getDestinationLat(): String? = prefs.getString(DESTINATION1_LAT, "0.0")
+    fun getDestination1Lat(): String? = prefs.getString(DESTINATION1_LAT, "0.0")
+    fun getDestination2Lat(): String? = prefs.getString(DESTINATION2_LAT, "0.0")
 
     fun clearPassengerPhone() {
         prefs.edit().remove(PASSENGER_PHONE).apply()

@@ -26,6 +26,7 @@
     <color name="color_text_orders">#014EA8</color>
     <color name="light_gray">#F8F9F8</color>
 
+    <color name="soft_black">#555050</color>
 
 
     <color name="background_driver_is_order">#fff</color>

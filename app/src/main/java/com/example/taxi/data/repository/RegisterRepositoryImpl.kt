@@ -25,9 +25,14 @@ class RegisterRepositoryImpl(private val apiService: ApiService) : RegisterRepos
         return apiService.register(phone = phone)
     }
 
-    override fun confirmPassword(request: ConfirmationRequest): Observable<MainResponse<UserData<IsCompletedModel>>> {
-        return apiService.confirmPhone(request = request)
+    override fun confirmPassword(
+        parentId: Int?,
+        request: ConfirmationRequest
+    ): Observable<MainResponse<UserData<IsCompletedModel>>> {
+        return apiService.confirmPhone(parentId = parentId, request = request)
     }
+
+
 
     override fun fillPersonData(
         request: PersonDataRequest

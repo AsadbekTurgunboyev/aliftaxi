@@ -61,7 +61,7 @@ class SocketRepository constructor(
 
     private fun connectSocket(token: String) {
         shouldReconnect = true
-        webSocket = object : WebSocketClient(URI("wss://aliftaxi.uz/connect/?token=$token")) {
+        webSocket = object : WebSocketClient(URI("wss://lidertaxi.uz/connect/?token=$token")) {
             override fun onOpen(handshakedata: ServerHandshake?) {
 //                isConnectedSocket.value = true
                 socketLive.postValue(true)

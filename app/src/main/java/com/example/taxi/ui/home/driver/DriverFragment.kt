@@ -47,9 +47,7 @@ import com.example.taxi.ui.home.HomeViewModel
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.example.taxi.ui.permission.PermissionCheckActivity
 import com.example.taxi.utils.*
-import com.example.taxi.utils.ConstantsUtils.locationDestination
 import com.example.taxi.utils.ConstantsUtils.locationDestination2
-import com.example.taxi.utils.ConstantsUtils.locationStart
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -88,7 +86,6 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         private const val BUTTON_ANIMATION_DURATION = 1500L
 
     }
-
 
     lateinit var soundManager: SoundManager
     private lateinit var locationTracker: LocationTracker
@@ -657,12 +654,12 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                     viewBinding.buttonNavigator.visibility = View.GONE
 
                     locationDestination2?.let {
-//                        changeDestination(
-//                            destination = Point.fromLngLat(
-//                                it.placeLongitude,
-//                                it.placeLatitude
-//                            )
-//                        )
+                        changeDestination(
+                            destination = Point.fromLngLat(
+                                it.placeLongitude,
+                                it.placeLatitude
+                            )
+                        )
                     }
                 }
 
@@ -811,11 +808,8 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         viewBinding.addressFromTextViewNavigator.text = preferenceManager.getDestinationAddress()
         viewBinding.buttonNavigator.setOnClickListener {
             findRoute(
-                Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude),
-                Point.fromLngLat(
-                    locationDestination.placeLongitude,
-                    locationDestination.placeLatitude
-                )
+                preferenceManager.getDestination1Lat(),
+                preferenceManager.getDestination1Long()
             )
         }
         with(viewBinding.bottomDialog) {
@@ -913,12 +907,12 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                         "Buyurtma ozgartirildi",
                         Toast.LENGTH_SHORT
                     ).show()
-//                    changeDestination(
-//                        destination = Point.fromLngLat(
-//                            locationDestination2!!.placeLongitude,
-//                            locationDestination2!!.placeLatitude
-//                        )
-//                    )
+                    changeDestination(
+                        destination = Point.fromLngLat(
+                            locationDestination2!!.placeLongitude,
+                            locationDestination2!!.placeLatitude
+                        )
+                    )
                 } else {
                     Toast.makeText(requireContext(), "Ikkinchi manzil yoq", Toast.LENGTH_SHORT)
                         .show()
@@ -1079,15 +1073,17 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
     }
 
-//    private fun changeDestination(destination: Point) {
-//        val currentLocation = navigationLocationProvider.lastLocation ?: return
-//        val originPoint = Point.fromLngLat(currentLocation.longitude, currentLocation.latitude)
-//        findRoute(originPoint, destination)
-//    }
+    private fun changeDestination(destination: Point) {
+//       viewBinding.buttonNavigator.visibility = View.VISIBLE
+        findRoute(
+            preferenceManager.getDestination2Lat(),
+            preferenceManager.getDestination2Long(),
+        )
+    }
 
-    private fun findRoute(origin: Point, destination: Point) {
+    private fun findRoute(lat: String?, long: String?) {
         val uri =
-            Uri.parse("google.navigation:q=${preferenceManager.getDestinationLat()},${preferenceManager.getDestinationLong()}")
+            Uri.parse("google.navigation:q=${lat},${long}")
 
         // Create an Intent from uri. Set the action to ACTION_VIEW
         val mapIntent = Intent(Intent.ACTION_VIEW, uri)

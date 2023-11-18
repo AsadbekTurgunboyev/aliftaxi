@@ -20,7 +20,7 @@ import okhttp3.MultipartBody
 interface RegisterRepository {
     fun register(phone : RegisterRequest): Observable<MainResponse<RegisterData>>
 
-    fun confirmPassword(request: ConfirmationRequest): Observable<MainResponse<UserData<IsCompletedModel>>>
+    fun confirmPassword(parentId: Int? = null,request: ConfirmationRequest): Observable<MainResponse<UserData<IsCompletedModel>>>
 
     fun fillPersonData( request: PersonDataRequest): Observable<MainResponse<UserData<IsCompletedModel>>>
 
