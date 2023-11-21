@@ -32,6 +32,7 @@ const val BASE_URL: String = "https://lidertaxi.uz/api/driver/"
 const val MAIN_URL: String = "https://lidertaxi.uz"
 //const val BASE_URL: String = "https://aliftaxi.uz/api/driver/"
 //const val MAIN_URL: String = "https://aliftaxi.uz"
+
 val NetworkModule = module {
 
     single { createService(get()) }
