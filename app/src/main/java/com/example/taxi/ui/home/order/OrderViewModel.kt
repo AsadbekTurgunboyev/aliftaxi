@@ -107,7 +107,7 @@ class OrderViewModel(private val getMainResponseUseCase: GetMainResponseUseCase)
 
 
     fun waitForAck(): Single<Boolean> {
-        return ackSubject.firstOrError().timeout(15, TimeUnit.SECONDS)
+        return ackSubject.firstOrError().timeout(7, TimeUnit.SECONDS)
     }
 
     fun sendLocation(request: LocationRequest) {

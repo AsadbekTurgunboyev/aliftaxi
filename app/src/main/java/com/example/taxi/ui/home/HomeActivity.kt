@@ -21,6 +21,7 @@ import android.provider.Settings
 import android.util.Log
 import android.util.Rational
 import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -132,7 +133,7 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
         registerReceiver(receiver, filter)
         viewBinding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         val appUpdateManager = AppUpdateManagerFactory.create(this)
 

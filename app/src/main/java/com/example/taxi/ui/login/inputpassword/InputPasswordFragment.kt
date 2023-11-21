@@ -14,10 +14,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.navigation.fragment.findNavController
+import com.android.installreferrer.api.InstallReferrerClient
+import com.android.installreferrer.api.InstallReferrerStateListener
+import com.android.installreferrer.api.ReferrerDetails
 import com.example.taxi.R
 import com.example.taxi.components.service.SmsReceiver.Companion.ACTION_OTP_RECEIVED
 import com.example.taxi.components.service.SmsReceiver.Companion.EXTRA_OTP_CODE
@@ -41,6 +45,7 @@ class InputPasswordFragment : Fragment() {
     private val inputPasswordViewModel: InputPasswordViewModel by viewModel()
     private val preferenceManager: UserPreferenceManager by inject()
     private lateinit var onBackPressedCallback: OnBackPressedCallback
+    private lateinit var referrerClient: InstallReferrerClient
 
     private var step = 1
 
@@ -84,7 +89,38 @@ class InputPasswordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        referrerClient = InstallReferrerClient.newBuilder(requireContext()).build()
+
         startSmsRetriever()
+
+        referrerClient.startConnection(object : InstallReferrerStateListener {
+
+            override fun onInstallReferrerSetupFinished(responseCode: Int) {
+                when (responseCode) {
+                    InstallReferrerClient.InstallReferrerResponse.OK -> {
+                        // Connection established.
+                        val response: ReferrerDetails = referrerClient.installReferrer
+                        Toast.makeText(requireContext(), "$response", Toast.LENGTH_SHORT).show()
+                        val referrerUrl = response.installReferrer
+                        val referrerClickTime = response.referrerClickTimestampSeconds
+                        val appInstallTime = response.installBeginTimestampSeconds
+                        val instantExperienceLaunched = response.googlePlayInstantParam
+
+                        // Use the referrerUrl as needed for your app.
+                    }
+                    InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED -> {
+                        // API not available on the current Play Store app.
+                    }
+                    InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE -> {
+                        // Connection couldn't be established.
+                    }
+                }
+            }
+
+            override fun onInstallReferrerServiceDisconnected() {
+                // Try to reconnect on the next app launch.
+            }
+        })
         imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputPasswordViewModel.confirmResponse.observe(viewLifecycleOwner, ::updateView)
 
@@ -234,6 +270,7 @@ class InputPasswordFragment : Fragment() {
     }
 
     override fun onDestroy() {
+        referrerClient.endConnection()
         super.onDestroy()
         timer.stop()
     }

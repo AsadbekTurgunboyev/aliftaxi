@@ -70,4 +70,9 @@
         android:name="com.example.taxi.ui.taxometer.TaximeterFragment"
         android:label="fragment_taximeter"
         tools:layout="@layout/fragment_taximeter" />
+    <fragment
+        android:id="@+id/shareQRFragment"
+        android:name="com.example.taxi.ui.home.qrcode.ShareQRFragment"
+        android:label="fragment_share_q_r"
+        tools:layout="@layout/fragment_share_q_r" />
 </navigation>

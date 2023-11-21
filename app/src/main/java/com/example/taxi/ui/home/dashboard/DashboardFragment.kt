@@ -212,6 +212,10 @@ class DashboardFragment : Fragment() {
                     navController.navigate(R.id.FAQFragment)
                     true
                 }
+                985 ->{
+                    navController.navigate(R.id.shareQRFragment)
+                    true
+                }
                 // 990 -> id for log-out
                 990 -> {
                     DialogUtils.showConfirmationDialog(requireContext()) {

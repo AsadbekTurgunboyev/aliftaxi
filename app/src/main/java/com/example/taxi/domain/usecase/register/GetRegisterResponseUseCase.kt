@@ -16,8 +16,8 @@ class GetRegisterResponseUseCase(private val registerRepository: RegisterReposit
     fun resendSMS(request: ResendSmsRequest) =
         registerRepository.resendSMS(request = request)
 
-    fun confirmPassword(request: ConfirmationRequest) =
-        registerRepository.confirmPassword(request = request)
+    fun confirmPassword(request: ConfirmationRequest, parentId : Int? = null) =
+        registerRepository.confirmPassword(request = request, parentId = parentId)
 
     fun fillPersonData(request: PersonDataRequest) =
         registerRepository.fillPersonData(request = request)

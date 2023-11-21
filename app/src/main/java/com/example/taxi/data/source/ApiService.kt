@@ -35,7 +35,10 @@ interface ApiService {
     fun register(@Body phone: RegisterRequest): Observable<MainResponse<RegisterData>>
 
     @POST("driver/confirm-phone")
-    fun confirmPhone(@Body request: ConfirmationRequest): Observable<MainResponse<UserData<IsCompletedModel>>>
+    fun confirmPhone(
+        @Query("id") parentId: Int? = null,
+        @Body request: ConfirmationRequest
+    ): Observable<MainResponse<UserData<IsCompletedModel>>>
 
     @POST("driver/resend-sms")
     fun resendSms(@Body request: ResendSmsRequest): Observable<MainResponse<UserData<IsCompletedModel>>>

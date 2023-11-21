@@ -77,11 +77,15 @@ class MenuClass(val context: Context, val preferenceManager: UserPreferenceManag
                 Triple(989, context.getString(R.string.baho_bering), R.drawable.ic_star)
             )
         ),
+        Triple(238,"Group 6", listOf(
+            Triple(985,context.getString(R.string.qr),R.drawable.ic_qr_code)
+        )),
         Triple(
             237,"Group 5", listOf(
                 Triple(990,context.getString(R.string.sign_out),R.drawable.baseline_logout_24)
             )
         )
+
 
     )
 
@@ -90,7 +94,8 @@ class MenuClass(val context: Context, val preferenceManager: UserPreferenceManag
         233 to MenuUtils.getActionViewNext(context),
         987 to MenuUtils.getActionViewNext(context),
         988 to MenuUtils.getActionViewNext(context),
-        989 to MenuUtils.getActionViewNext(context)
+        989 to MenuUtils.getActionViewNext(context),
+        985 to MenuUtils.getActionViewNext(context)
     )
 
     fun getMenu(): List<Triple<Int, String, List<Triple<Int, String, Int>>>> {
