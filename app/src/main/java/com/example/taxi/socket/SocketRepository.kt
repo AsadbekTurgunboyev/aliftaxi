@@ -24,7 +24,7 @@ class SocketRepository constructor(
     private var shouldReconnect = true
 
     private var _isConnected: Boolean = false
-    val socketLive=  MutableLiveData<Boolean>().apply {
+    val socketLive = MutableLiveData<Boolean>().apply {
         value = false
     }
     var isConnected: Boolean
@@ -61,7 +61,12 @@ class SocketRepository constructor(
 
     private fun connectSocket(token: String) {
         shouldReconnect = true
-        webSocket = object : WebSocketClient(URI("wss://aliftaxi.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://aliftaxi.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://my.xamkortaxi.uz/connect/?token=$token")) {
+        webSocket = object : WebSocketClient(URI("wss://lidertaxi.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://wintaxi.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://my.likestar.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://my.mrtaxi.uz/connect/?token=$token")) {
             override fun onOpen(handshakedata: ServerHandshake?) {
 //                isConnectedSocket.value = true
                 socketLive.postValue(true)

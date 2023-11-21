@@ -3,7 +3,6 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'kotlin-parcelize'
-
 }
 android {
     namespace 'com.example.taxi'
@@ -12,10 +11,13 @@ android {
         viewBinding = true
     }
 
-
     defaultConfig {
 //        uz.insoft.AlifTaxi
-        applicationId "uz.insoft.AlifTaxi"
+//        applicationId "uz.insoft.AlifTaxi"
+//        applicationId "uz.insoft.hamkor"
+//        applicationId "uz.insoft.likeStar"
+        applicationId "uz.insoft.mrtaxi"
+//        applicationId "uz.insoft.win_taxi"
         minSdk 23
         targetSdk 33
         versionCode 41

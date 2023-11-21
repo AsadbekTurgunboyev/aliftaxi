@@ -18,6 +18,7 @@ import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.ui.home.HomeActivity
 import com.example.taxi.ui.login.LoginActivity
 import com.example.taxi.ui.permission.PermissionCheckActivity
+import com.example.taxi.ui.splash.SplashViewModel
 import com.example.taxi.ui.update.UpdateActivity
 import com.example.taxi.utils.LocationPermissionUtils
 import com.example.taxi.utils.ResourceState
