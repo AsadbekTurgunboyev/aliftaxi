@@ -18,8 +18,8 @@ android {
 //        applicationId "uz.insoft.AlifTaxi"
 //        applicationId "uz.insoft.hamkor"
 //        applicationId "uz.insoft.likeStar"
-        applicationId "uz.insoft.mrtaxi"
-//        applicationId "uz.insoft.win_taxi"
+//        applicationId "uz.insoft.mrtaxi"
+        applicationId "uz.insoft.win_taxi"
         minSdk 23
         targetSdk 33
         versionCode 41

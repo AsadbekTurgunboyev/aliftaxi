@@ -77,9 +77,9 @@ class MenuClass(val context: Context, val preferenceManager: UserPreferenceManag
                 Triple(989, context.getString(R.string.baho_bering), R.drawable.ic_star)
             )
         ),
-        Triple(238,"Group 6", listOf(
-            Triple(985,context.getString(R.string.qr),R.drawable.ic_qr_code)
-        )),
+//        Triple(238,"Group 6", listOf(
+//            Triple(985,context.getString(R.string.qr),R.drawable.ic_qr_code)
+//        )),
         Triple(
             237,"Group 5", listOf(
                 Triple(990,context.getString(R.string.sign_out),R.drawable.baseline_logout_24)

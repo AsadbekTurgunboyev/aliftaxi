@@ -63,8 +63,8 @@ class SocketRepository constructor(
         shouldReconnect = true
 //        webSocket = object : WebSocketClient(URI("wss://aliftaxi.uz/connect/?token=$token")) {
 //        webSocket = object : WebSocketClient(URI("wss://my.xamkortaxi.uz/connect/?token=$token")) {
-        webSocket = object : WebSocketClient(URI("wss://lidertaxi.uz/connect/?token=$token")) {
-//        webSocket = object : WebSocketClient(URI("wss://wintaxi.uz/connect/?token=$token")) {
+//        webSocket = object : WebSocketClient(URI("wss://lidertaxi.uz/connect/?token=$token")) {
+        webSocket = object : WebSocketClient(URI("wss://wintaxi.uz/connect/?token=$token")) {
 //        webSocket = object : WebSocketClient(URI("wss://my.likestar.uz/connect/?token=$token")) {
 //        webSocket = object : WebSocketClient(URI("wss://my.mrtaxi.uz/connect/?token=$token")) {
             override fun onOpen(handshakedata: ServerHandshake?) {
