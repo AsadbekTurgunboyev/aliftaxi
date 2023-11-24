@@ -143,7 +143,7 @@ class KillStateDialogService : Service() {
                 wakeLock?.release()
                 soundPlayer.stopSound()
 
-            }, 15000)
+            }, 8000)
 
             startForeground(notificationId, createNotification())
         } else {
@@ -242,7 +242,7 @@ private fun animateProgressBar() {
     val objectAnimator = ObjectAnimator.ofInt(
         progressBar, "progress",
         progressBar!!.progress, 0
-    ).setDuration(15000)
+    ).setDuration(8000)
 
     objectAnimator.addUpdateListener { valueAnimator ->
         val progress = valueAnimator.animatedValue as Int

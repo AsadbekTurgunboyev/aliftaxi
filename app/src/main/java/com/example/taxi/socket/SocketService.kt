@@ -30,7 +30,7 @@ import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
 
-class SocketService : android.app.Service() {
+class SocketService : Service() {
 
     // Initialize your dependencies here, e.g., ViewModel, CoroutineScope, SocketMessageProcessor
 
