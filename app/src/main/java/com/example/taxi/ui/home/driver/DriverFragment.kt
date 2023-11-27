@@ -895,7 +895,6 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                 if (!preferenceManager.getIsCountingDown()) {
                     preferenceManager.setFinishedTimeOrder(System.currentTimeMillis())
                 }
-
                 preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.STARTED)
                 viewBinding.bottomDialog.timeWorkTextView.visibility = View.VISIBLE
                 viewBinding.bottomDialog.progressTimeTextView.visibility = View.GONE
@@ -1331,7 +1330,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
             when (response.state) {
                 ResourceState.SUCCESS -> {
                     preferenceManager.saveLastRaceId(-1)
-                    soundManager.playSoundJourneyBeginWithBelt()
+                    soundManager.playSoundLetsGo()
                     viewBinding.bottomDialog.swipeButton.isChecked = false
                     driverViewModel.startedOrder()
                     if (LocationPermissionUtils.isBasicPermissionGranted(requireContext())

@@ -96,7 +96,7 @@
                     android:id="@+id/descTextView"
                     android:layout_width="match_parent"
                     android:layout_marginTop="@dimen/_5sdp"
-                    android:text="Taxometer - Taxi xizmatining 'Ekonom' tarifi bo'yicha narx hisoblashlarni amalga oshiradi"
+                    android:text="Taxometer - Taxi xizmatining sizda mavjud tariflari bo'yicha narx hisoblashlarni amalga oshiradi"
                     android:layout_height="wrap_content"/>
 
             </LinearLayout>

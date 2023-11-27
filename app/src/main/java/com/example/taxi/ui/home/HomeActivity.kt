@@ -27,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavOptions
 import androidx.navigation.fragment.NavHostFragment
+import com.example.soundmodule.SoundManager
 import com.example.taxi.R
 import com.example.taxi.components.service.ActivityMessenger
 import com.example.taxi.components.service.DriveBackGroundService
@@ -65,6 +66,7 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
     private val OVERLAY_PERMISSION_REQUEST_CODE = 5
     private val userPreferenceManager: UserPreferenceManager by inject()
 
+    lateinit var soundManager: SoundManager
     private val orderViewModel: OrderViewModel by viewModel()
     private val viewModel: HomeViewModel by viewModel()
     private lateinit var navController: NavController
@@ -133,7 +135,9 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
         registerReceiver(receiver, filter)
         viewBinding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        soundManager = SoundManager(this)
+
 
         val appUpdateManager = AppUpdateManagerFactory.create(this)
 
@@ -335,6 +339,8 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
 
     private fun onDriveFinished(raceId: Long) {
         driveReportViewModel.setInitData(driveId = raceId)
+        soundManager.playSoundArrivedToDestination()
+
         val dialog = DriveFinishDialog(raceId = raceId, driveReportViewModel)
         dialog.show(supportFragmentManager, "DriveFinishDialog")
     }

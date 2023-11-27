@@ -220,7 +220,7 @@
                 app:iconTintMode="multiply"
                 app:iconTint="@color/blue"
                 app:iconGravity="textEnd"
-                android:textColor="@color/black"
+                android:textColor="@color/text_black_white"
                 android:textSize="@dimen/_10ssp"
                 app:iconPadding="@dimen/_4sdp"
                 app:iconSize="@dimen/_12sdp"

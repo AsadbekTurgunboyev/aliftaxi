@@ -466,6 +466,7 @@ class UserPreferenceManager(private val context: Context) {
     }
 
     fun saveLastRace(order: OrderCompleteRequest, raceId: Int) {
+
         prefs.edit().putInt(LAST_RACE_DISTANCE, order.distance).apply()
         prefs.edit().putInt(LAST_RACE_COST, order.cost).apply()
         prefs.edit().putInt(LAST_RACE_WAIT_COST, order.wait_cost).apply()

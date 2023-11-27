@@ -14,14 +14,14 @@ import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.taxi.R
+import com.example.taxi.custom.map.TurfConstants
+import com.example.taxi.custom.map.TurfMeasurement.distance
 import com.example.taxi.domain.model.location.LocationRequest
 import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.ui.home.HomeActivity
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.mapbox.android.core.location.*
 import com.mapbox.geojson.Point
-import com.mapbox.turf.TurfConstants
-import com.mapbox.turf.TurfMeasurement.distance
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.CoroutineScope
@@ -29,8 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import org.koin.android.ext.android.inject
 import java.util.concurrent.TimeUnit
 
-
-class SocketService : Service() {
+class SocketService : android.app.Service() {
 
     // Initialize your dependencies here, e.g., ViewModel, CoroutineScope, SocketMessageProcessor
 
@@ -38,22 +37,17 @@ class SocketService : Service() {
     private val orderViewModel: OrderViewModel by inject()
     private val compositeDisposable = CompositeDisposable()
     private var hasLocationChanged = false
-    private var lastSentAccuracy = 0
-    private var lastSentAngle = 0
-
     private val handler = Handler(Looper.getMainLooper())
     private val locationSenderRunnable: Runnable = object : Runnable {
         override fun run() {
             if (hasLocationChanged && lastSentLocation != null) {
                 hasLocationChanged = false
-
-                Log.d("LocationUpdateFailure", "run: ")
                 socketMessageProcessor.sendLocation(
                     LocationRequest(
                         latitude = lastSentLocation!!.latitude(),
                         longitude = lastSentLocation!!.longitude(),
-                        accuracy = lastSentAccuracy, // Replace with actual accuracy
-                        angle = lastSentAngle // Replace with actual angle
+                        accuracy = 0, // Replace with actual accuracy
+                        angle = 0 // Replace with actual angle
                     )
                 )
                 compositeDisposable.add(
@@ -62,18 +56,18 @@ class SocketService : Service() {
                         .subscribe({
                             if (it) {
                                 // Acknowledgment received, proceed to next location
-                                handler.postDelayed(this, 2000)
+                                handler.postDelayed(this, 15000)
                             } else {
                                 // No acknowledgment received, retry or skip
-                                handler.postDelayed(this, 1000)
+                                handler.postDelayed(this, 15000)
                             }
                         }, {
                             // Timeout or other error occurred
-                            handler.postDelayed(this, 1000)
+                            handler.postDelayed(this, 15000)
                         })
                 )
             }else{
-                handler.postDelayed(this, 1000)
+                handler.postDelayed(this, 15000)
             }
         }
     }
@@ -87,7 +81,7 @@ class SocketService : Service() {
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             val data = intent?.getStringExtra("data")
-
+            Log.d("jarayon", "onReceive: $data")
             sendDataToSocket(data)
         }
     }
@@ -126,15 +120,15 @@ class SocketService : Service() {
         )
         locationEngine = LocationEngineProvider.getBestLocationEngine(this)
         startLocationUpdates()
-        handler.postDelayed(locationSenderRunnable, 1000)
+        handler.postDelayed(locationSenderRunnable, 15000)
     }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-        val request = LocationEngineRequest.Builder(5000)
+        val request = LocationEngineRequest.Builder(15000)
             .setPriority(LocationEngineRequest.PRIORITY_HIGH_ACCURACY)
-            .setMaxWaitTime(5000)
-            .setFastestInterval(5000) // Increased maxWaitTime
+            .setMaxWaitTime(15000)
+            .setFastestInterval(10000) // Increased maxWaitTime
             .build()
 
         locationEngine.requestLocationUpdates(request, object :
@@ -151,13 +145,12 @@ class SocketService : Service() {
                         lastSentLocation!!,
                         currentLocationPoint,
                         TurfConstants.UNIT_KILOMETERS
-                    ) > 0.1
+                    ) > 0.01
                 ) {
-                    Log.d("locationupda", "onSuccess: ozgarish")
                     val latitude = location.latitude
                     val longitude = location.longitude
-                    lastSentAccuracy = location.accuracy.toInt()
-                    lastSentAngle = location.bearing.toInt()
+                    val accuracy = location.accuracy
+                    val angle = location.bearing
 
 
                     // Replace this with your own ViewModel or use socketMessageProcessor to send the location
@@ -185,6 +178,7 @@ class SocketService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val token = intent?.getStringExtra("TOKEN")
+        Log.d("jarayon", "onStartCommand: umumiy")
 
 
         val isReadyForWork = intent?.getBooleanExtra("IS_READY_FOR_WORK", false) ?: false
@@ -204,6 +198,7 @@ class SocketService : Service() {
     }
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("jarayon", "onDestroy: sihlayapti ")
         socketRepository?.disconnectSocket()
         socketRepository = null
         unregisterReceiver(receiver)
@@ -260,11 +255,6 @@ class SocketService : Service() {
 
 
     private fun checkAndUpdateCPUWake() {
-//        if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.COMPLETED) {
-//            releaseWakelock()
-//        } else {
-//            acquireWakeLock()
-//        }
         acquireWakeLock()
     }
 
@@ -276,6 +266,7 @@ class SocketService : Service() {
 
     private fun acquireWakeLock() {
         if (wakeLock.isHeld.not()) {
+            Log.d("jarayon", "acquireWakeLock: isheld")
             wakeLock.acquire(TimeUnit.HOURS.toMillis(2))
         }
     }

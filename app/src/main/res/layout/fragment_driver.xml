@@ -56,7 +56,6 @@
             android:id="@+id/call_dispetcher"
             android:layout_marginBottom="@dimen/_10sdp"
             android:layout_gravity="end"
-            app:layout_anchor="@id/maneuverView"
             android:layout_height="wrap_content"/>
 
     </LinearLayout>
@@ -80,10 +79,11 @@
             android:id="@+id/imageView5"
             android:layout_width="@dimen/_14sdp"
             android:layout_height="@dimen/_14sdp"
-            android:alpha=".6"
-            android:src="@drawable/mapbox_ic_circle"
+            android:alpha=".4"
+            android:src="@drawable/shape_cirlce_active"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/black" />
 
 
         <TextView

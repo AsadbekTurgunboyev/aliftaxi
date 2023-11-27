@@ -22,8 +22,8 @@ android {
         applicationId "uz.insoft.win_taxi"
         minSdk 23
         targetSdk 33
-        versionCode 41
-        versionName "6.10.29"
+        versionCode 43
+        versionName "7.11.19"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -128,10 +128,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     implementation 'com.mapbox.maps:android:10.13.0'
-//
-    implementation "com.mapbox.navigation:android:2.13.1"
+//////
+//    implementation "com.mapbox.navigation:android:2.13.1"
     implementation "com.mapbox.navigation:ui-dropin:2.13.1"
-
+//
     implementation 'com.google.android.play:core:1.10.3'
     implementation 'com.google.android.play:core-ktx:1.8.1'
 

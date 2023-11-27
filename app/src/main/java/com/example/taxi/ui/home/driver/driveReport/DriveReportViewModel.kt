@@ -1,5 +1,6 @@
 package com.example.taxi.ui.home.driver.driveReport
 
+import android.util.Log
 import androidx.lifecycle.*
 import com.example.taxi.domain.drive.DriveLocalityAddService
 import com.example.taxi.domain.drive.DriveStatAnalyser
@@ -19,6 +20,7 @@ class DriveReportViewModel(
     private var driveId: Long = -1L
 
     fun setInitData(driveId: Long) {
+        Log.d("yakun", "setInitData: $driveId")
         this.driveId = driveId
     }
 
@@ -65,9 +67,11 @@ class DriveReportViewModel(
         }
     }
     fun checkAndUpdateDrive() {
+        Log.d("yakun", "checkAndUpdateDrive: $driveId")
         viewModelScope.launch(Dispatchers.IO) {
             driveRepository.getDrive(driveId)?.let { drive ->
                 if (drive.startLocality == null || drive.endLocality == null) {
+                    Log.d("yakun", "checkAndUpdateDrive: ")
                     driveLocalityAddService.getAndUpdateLocality(drive)
                 }
             }

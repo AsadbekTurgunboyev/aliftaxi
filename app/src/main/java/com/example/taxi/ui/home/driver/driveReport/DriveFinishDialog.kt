@@ -8,6 +8,10 @@ import android.view.*
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.DialogFragment
+import androidx.navigation.NavOptions
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.fragment.findNavController
+import com.example.soundmodule.SoundManager
 import com.example.taxi.R
 import com.example.taxi.databinding.DialogFinishOrderBinding
 import com.example.taxi.domain.location.LocationPoint
@@ -26,6 +30,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
 
     private val driverViewModel: DriverViewModel by sharedViewModel()
     private val preferenceManager: UserPreferenceManager by inject()
+    lateinit var soundManager: SoundManager
 
     var farCenterDistance = 0.0
     var order_history_id = 0
@@ -38,6 +43,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
         savedInstanceState: Bundle?
     ): View {
         viewBinding = DialogFinishOrderBinding.inflate(layoutInflater, container, false)
+
 
         viewBinding.payWithBonus.visibility = if(preferenceManager.getStatusIsTaximeter()) View.GONE else View.VISIBLE
         return viewBinding.root
@@ -304,11 +310,13 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
                     preferenceManager.saveLastRace(order, 1)
                     viewModel.deleteDrive(driveId = raceId)
                     preferenceManager.timeClear()
+
                     viewBinding.finishButtonDialog.stopAnimation()
                     navigateToDashboardFragment()
                 }
 
                 ResourceState.SUCCESS -> {
+
                     preferenceManager.saveLastRace(order, -1)
 
                     viewBinding.finishButtonDialog.stopAnimation()
@@ -342,6 +350,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
                 android.R.anim.fade_in,
                 android.R.anim.fade_out
             )
+
             preferenceManager.saveStatusIsTaximeter(false)
             dismiss()
             startActivity(intent)
@@ -350,6 +359,7 @@ class DriveFinishDialog(val raceId: Long, val viewModel: DriveReportViewModel) :
                 android.R.anim.fade_out
             )
         }
+
 
     }
 

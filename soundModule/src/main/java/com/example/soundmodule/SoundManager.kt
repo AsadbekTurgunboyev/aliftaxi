@@ -3,12 +3,28 @@ package com.example.soundmodule
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
+import java.util.Calendar
 
 class SoundManager(context: Context) {
 
     private val soundPool: SoundPool
     private val soundMap: HashMap<Int, Int>
     private val activeStreams: MutableList<Int> = mutableListOf()
+
+    private val preferences by lazy {
+        context.getSharedPreferences(
+            "SoundManagerPrefs",
+            Context.MODE_PRIVATE
+        )
+    }
+
+    // Cache the last online date to minimize SharedPreferences access.
+    private var lastOnlineDate: Long
+        get() = preferences.getLong("lastOnlineDate", 0)
+        set(value) = preferences.edit().putLong("lastOnlineDate", value).apply()
+
+    // Use a lazy initializer for the calendar to avoid unnecessary instances.
+    private val currentDate by lazy { Calendar.getInstance() }
 
 
     init {
@@ -29,6 +45,26 @@ class SoundManager(context: Context) {
         soundMap[R.raw.safar_boshlandi_xavfsizlik_kamari] =
             soundPool.load(context, R.raw.safar_boshlandi_xavfsizlik_kamari, 1)
 
+        soundMap[R.raw.siz_yetib_keldingiz] =
+            soundPool.load(context, R.raw.siz_yetib_keldingiz, 1)
+
+        soundMap[R.raw.siz_liniyadasiz_kuningiz] =
+            soundPool.load(context, R.raw.siz_liniyadasiz_kuningiz, 1)
+
+
+    }
+
+    fun playSoundBasedOnFirstOnline() {
+        currentDate.timeInMillis =
+            System.currentTimeMillis() // Ensure the calendar is up to date when this method is called.
+
+        if (isFirstTimeOnlineToday()) {
+            lastOnlineDate =
+                currentDate.timeInMillis // Update the cached and persistent last online date.
+            playSoundYouAreOnlineGoodDay()
+        } else {
+            playSoundYouAreOnline()
+        }
     }
 
     private fun playSoundInternal(soundId: Int) {
@@ -48,7 +84,8 @@ class SoundManager(context: Context) {
         activeStreams.clear()
     }
 
-    fun playSoundYouAreOnline() {
+
+    private fun playSoundYouAreOnline() {
         playSoundInternal(R.raw.siz_liniyadasiz)
     }
 
@@ -60,7 +97,26 @@ class SoundManager(context: Context) {
         playSoundInternal(R.raw.safar_boshlandi_xavfsizlik_kamari)
     }
 
+    fun playSoundArrivedToDestination() {
+        playSoundInternal(R.raw.siz_yetib_keldingiz)
+    }
+
+    private fun playSoundYouAreOnlineGoodDay() {
+        playSoundInternal(R.raw.siz_liniyadasiz_kuningiz)
+    }
+
     fun playSoundLetsGo() {
         playSoundInternal(R.raw.kettik)
+    }
+
+
+    private fun isFirstTimeOnlineToday(): Boolean {
+        // Convert the lastOnlineDate to a Calendar instance.
+        val lastDateCalendar = Calendar.getInstance().apply {
+            timeInMillis = lastOnlineDate
+        }
+        // Compare the current date and the last online date.
+        return lastDateCalendar.get(Calendar.YEAR) != currentDate.get(Calendar.YEAR) ||
+                lastDateCalendar.get(Calendar.DAY_OF_YEAR) != currentDate.get(Calendar.DAY_OF_YEAR)
     }
 }

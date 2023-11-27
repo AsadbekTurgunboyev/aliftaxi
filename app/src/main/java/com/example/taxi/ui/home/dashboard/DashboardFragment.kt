@@ -661,7 +661,7 @@ class DashboardFragment : Fragment() {
             }
 
             if (isOn) {
-                soundManager.playSoundYouAreOnline()
+                soundManager.playSoundBasedOnFirstOnline()
                 Intent(requireActivity(), SocketService::class.java).also { intent ->
                     intent.putExtra("TOKEN", userPreferenceManager.getToken())
                     intent.putExtra("IS_READY_FOR_WORK", true)
