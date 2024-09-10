@@ -239,9 +239,9 @@
     <string name="messag">Хабар</string>
 
     <string name="yaqin_atrofdagi_buyurtmani_topish_hattoki_fonda_bo_lsa_ham">Яқин атрофдаги буюртмани топиш, ҳаттоки фонда бўлса ҳам.</string>
-    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Ҳаракатланишингизни кузатиш ва уларни Бекжаан такси мижозлари учун кўрсатиш ва хабардор қилиш.</string>
+    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Ҳаракатланишингизни кузатиш ва уларни Alif taxi мижозлари учун кўрсатиш ва хабардор қилиш.</string>
     <string name="sozlamalarni_tekshiring">Созламаларни текширинг!</string>
-    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Бекжаан Такси(драйвер) иловаси жойлашувингизни доимий равишда кузатишга рухсат беришингизни сўрайди. Ушбу дастур жойлашувингиздан қуйидагилар учун фойдаланади:</string>
+    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Alif Taxi(driver) иловаси жойлашувингизни доимий равишда кузатишга рухсат беришингизни сўрайди. Ушбу дастур жойлашувингиздан қуйидагилар учун фойдаланади:</string>
     <string name="o_tkazib_yuborish">Ўтказиб юбориш</string>
     <string name="ruxsatnomalar">Рухсатномалар</string>
     <string name="dasturdan_to_laqonli_foydalanishingiz_uchun_ushbu_ruxsatnomalarga_ruxsat_berishingiz_zarur">Дастурдан тўлақонли фойдаланишингиз учун ушбу рухсатномаларга рухсат беришингиз зарур.</string>
@@ -250,5 +250,5 @@
     <string name="aniq_joylashuv_uchun_ruxsat">Аниқ жойлашув учун рухсат</string>
     <string name="boshqa_dasturlar_ustidan_ochilish">Бошқа дастурлар устида очилиш</string>
     <string name="quvvat_tejashni_o_chirish">Қувват тежашни ўчириш</string>
-    <string name="battery_permission">Бекжаан Такси(драйвер) дастури фонда ҳам мунтазам равишда ишлаши учун қувват тежаш режими фаолсизлантириш зарур.\nБуни кейинчалик созламалар бўлимидан ўчириб қўйишингиз мумкин.</string>
+    <string name="battery_permission">Alif Taxi(Driver) дастури фонда ҳам мунтазам равишда ишлаши учун қувват тежаш режими фаолсизлантириш зарур.\nБуни кейинчалик созламалар бўлимидан ўчириб қўйишингиз мумкин.</string>
 </resources>

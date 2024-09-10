@@ -236,9 +236,9 @@
     <string name="messag">Сообщение</string>
 
     <string name="yaqin_atrofdagi_buyurtmani_topish_hattoki_fonda_bo_lsa_ham">Поиск ближайших заказов, даже если приложение работает в фоновом режиме.</string>
-    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Отслеживание вашего движения и уведомление клиентов Bekjaan Taxi.</string>
+    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Отслеживание вашего движения и уведомление клиентов Alif Taxi.</string>
     <string name="sozlamalarni_tekshiring">Проверьте настройки!</string>
-    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Приложение Bekjaan Taxi (Driver) просит разрешить постоянное отслеживание вашего местоположения. Это приложение использует ваше местоположение для следующих целей:</string>
+    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Приложение Alif Taxi (Driver) просит разрешить постоянное отслеживание вашего местоположения. Это приложение использует ваше местоположение для следующих целей:</string>
     <string name="o_tkazib_yuborish">Пропустить</string>
     <string name="ruxsatnomalar">Разрешения</string>
     <string name="dasturdan_to_laqonli_foydalanishingiz_uchun_ushbu_ruxsatnomalarga_ruxsat_berishingiz_zarur">Для полного использования приложения необходимо предоставить эти разрешения.</string>
@@ -247,5 +247,5 @@
     <string name="aniq_joylashuv_uchun_ruxsat">Разрешение для точного местоположения</string>
     <string name="boshqa_dasturlar_ustidan_ochilish">Открытие поверх других приложений</string>
     <string name="quvvat_tejashni_o_chirish">Отключение энергосбережения</string>
-    <string name="battery_permission">Для постоянной работы приложения Bekjaan Taxi (Driver) в фоновом режиме необходимо отключить режим энергосбережения.\nЭто можно отключить позже в разделе настроек.</string>
+    <string name="battery_permission">Для постоянной работы приложения Alif Taxi (Driver) в фоновом режиме необходимо отключить режим энергосбережения.\nЭто можно отключить позже в разделе настроек.</string>
 </resources>
