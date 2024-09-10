@@ -20,7 +20,10 @@ data class OrderAccept<U>(
     val user: U,
     @SerializedName("mode") val mode: ModeModel,
     val activeHistory: Any?,
-    val settings: List<Settings>
+    val settings: List<Settings>,
+    val currentPosition: Int,
+    @SerializedName("arrived_at") val arrivedAt: Int? = null,
+    @SerializedName("started_at") val startedAt: Int? = null
 ) {
 
     fun getSum(): Int {

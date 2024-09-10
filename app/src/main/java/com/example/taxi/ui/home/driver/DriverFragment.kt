@@ -16,6 +16,8 @@ import android.location.Location
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.*
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.*
 import android.widget.FrameLayout
@@ -24,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.doOnLayout
 import androidx.fragment.app.Fragment
 import com.example.soundmodule.SoundManager
@@ -38,6 +41,7 @@ import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.domain.preference.UserPreferenceManager.Companion.START_COST
+import com.example.taxi.network.MyPhoneStateListener
 import com.example.taxi.network.NO_CONNECT
 import com.example.taxi.network.NetworkReceiver
 import com.example.taxi.network.NetworkViewModel
@@ -47,7 +51,9 @@ import com.example.taxi.ui.home.HomeViewModel
 import com.example.taxi.ui.home.order.OrderViewModel
 import com.example.taxi.ui.permission.PermissionCheckActivity
 import com.example.taxi.utils.*
+import com.example.taxi.utils.ConstantsUtils.locationDestination
 import com.example.taxi.utils.ConstantsUtils.locationDestination2
+import com.example.taxi.utils.ConstantsUtils.locationStart
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -82,11 +88,6 @@ import java.util.concurrent.TimeUnit
 class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
 
-    private companion object {
-        private const val BUTTON_ANIMATION_DURATION = 1500L
-
-    }
-
     lateinit var soundManager: SoundManager
     private lateinit var locationTracker: LocationTracker
     private val networkViewModel: NetworkViewModel by viewModel()
@@ -99,6 +100,9 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     private val homeViewModel: HomeViewModel by sharedViewModel()
     private val driverViewModel: DriverViewModel by sharedViewModel()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private lateinit var phoneStateListener: MyPhoneStateListener
+    private lateinit var telephonyManager: TelephonyManager
     private lateinit var locationCallback: LocationCallback
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
@@ -329,6 +333,32 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = preferenceManager.getSharedPreferences()
+
+
+        when (arguments?.getInt("driver_current_position", -1)) {
+            ConstantsUtils.STATUS_GOING_TO_CLIENT -> {
+                driverViewModel.acceptedOrder()
+            }
+
+            ConstantsUtils.STATUS_WAITING_FOR_CLIENT -> {
+                val startTime = arguments?.getInt("driver_arrivedAt", 0)
+                startTime?.toLong()?.let { preferenceManager.setStartedTimeAcceptOrder(it * 1000) }
+                driverViewModel.arrivedOrder()
+            }
+
+            ConstantsUtils.STATUS_ON_THE_WAY -> {
+                homeViewModel.startDrive()
+                driverViewModel.startedOrder()
+            }
+        }
+
+        telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        phoneStateListener = MyPhoneStateListener(requireContext()) { isSpeedNormal ->
+            if (isSpeedNormal) {
+                networkViewModel.getOrderCurrent()
+            }
+        }
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
     }
 
     override fun onCreateView(
@@ -348,13 +378,14 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         requireContext().registerReceiver(networkReceiver, filter)
 
         networkViewModel.response.observe(viewLifecycleOwner) { response ->
-            when (response.state) {
+            when (response?.state) {
                 ResourceState.SUCCESS -> {
 
                 }
 
                 ResourceState.ERROR -> {
                     if (response.message == NO_CONNECT) {
+                        networkViewModel.clearNetworkData()
                         Log.d("bekor", "onCreateView: buyurtma bekor qilind: ${response.message} ")
                         val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
                         intent.putExtra(SocketConfig.ORDER_CANCELLED, NO_CONNECT)
@@ -366,6 +397,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                 }
 
                 ResourceState.LOADING -> {}
+                else -> {}
             }
         }
 
@@ -654,12 +686,12 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                     viewBinding.buttonNavigator.visibility = View.GONE
 
                     locationDestination2?.let {
-                        changeDestination(
-                            destination = Point.fromLngLat(
-                                it.placeLongitude,
-                                it.placeLatitude
-                            )
-                        )
+//                        changeDestination(
+//                            destination = Point.fromLngLat(
+//                                it.placeLongitude,
+//                                it.placeLatitude
+//                            )
+//                        )
                     }
                 }
 
@@ -808,8 +840,11 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
         viewBinding.addressFromTextViewNavigator.text = preferenceManager.getDestinationAddress()
         viewBinding.buttonNavigator.setOnClickListener {
             findRoute(
-                preferenceManager.getDestination1Lat(),
-                preferenceManager.getDestination1Long()
+                Point.fromLngLat(locationStart.placeLongitude, locationStart.placeLatitude),
+                Point.fromLngLat(
+                    locationDestination.placeLongitude,
+                    locationDestination.placeLatitude
+                )
             )
         }
         with(viewBinding.bottomDialog) {
@@ -906,12 +941,12 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
                         "Buyurtma ozgartirildi",
                         Toast.LENGTH_SHORT
                     ).show()
-                    changeDestination(
-                        destination = Point.fromLngLat(
-                            locationDestination2!!.placeLongitude,
-                            locationDestination2!!.placeLatitude
-                        )
-                    )
+//                    changeDestination(
+//                        destination = Point.fromLngLat(
+//                            locationDestination2!!.placeLongitude,
+//                            locationDestination2!!.placeLatitude
+//                        )
+//                    )
                 } else {
                     Toast.makeText(requireContext(), "Ikkinchi manzil yoq", Toast.LENGTH_SHORT)
                         .show()
@@ -1072,17 +1107,15 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
     }
 
-    private fun changeDestination(destination: Point) {
-//       viewBinding.buttonNavigator.visibility = View.VISIBLE
-        findRoute(
-            preferenceManager.getDestination2Lat(),
-            preferenceManager.getDestination2Long(),
-        )
-    }
+//    private fun changeDestination(destination: Point) {
+//        val currentLocation = navigationLocationProvider.lastLocation ?: return
+//        val originPoint = Point.fromLngLat(currentLocation.longitude, currentLocation.latitude)
+//        findRoute(originPoint, destination)
+//    }
 
-    private fun findRoute(lat: String?, long: String?) {
+    private fun findRoute(origin: Point, destination: Point) {
         val uri =
-            Uri.parse("google.navigation:q=${lat},${long}")
+            Uri.parse("google.navigation:q=${preferenceManager.getDestinationLat()},${preferenceManager.getDestinationLong()}")
 
         // Create an Intent from uri. Set the action to ACTION_VIEW
         val mapIntent = Intent(Intent.ACTION_VIEW, uri)
@@ -1250,6 +1283,7 @@ class DriverFragment : Fragment(), LocationTracker.LocationUpdateListener {
     override fun onDestroy() {
         super.onDestroy()
         locationTracker.stopLocationUpdates()
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
 
 //        if (preferenceManager.getDriverStatus() == UserPreferenceManager.DriverStatus.COMPLETED) {
 //            MapboxNavigationProvider.destroy()

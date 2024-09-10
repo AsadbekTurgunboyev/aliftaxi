@@ -9,4 +9,7 @@ object DriveAction {
     const val STARTED = 5
     const val COMPLETED = 6
     const val ACCEPT = 7
+
+    const val TAX_STARTED = 8
+    const val TAX_COMPLETED = 9
 }

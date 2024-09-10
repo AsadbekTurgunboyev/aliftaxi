@@ -11,4 +11,10 @@ object ConstantsUtils {
     var locationStart: MapLocation = MapLocation(0.0, 0.0)
     var locationDestination: MapLocation = MapLocation(0.0, 0.0)
     var locationDestination2: MapLocation? = MapLocation(0.0,0.0)
+
+    const val STATUS_GOING_TO_CLIENT = 1;
+    const val STATUS_WAITING_FOR_CLIENT = 2;
+    const val STATUS_ON_THE_WAY = 3;
+    const val STATUS_CANCELLED = 4;
+    const val STATUS_FINISHED = 5;
 }

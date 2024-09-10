@@ -122,9 +122,6 @@ class ChoosingLanguageFragment : Fragment() {
 //    }
 
     private fun updateLanguage(language: UserPreferenceManager.Language) {
-        Log.e("til", "updateLanguage: $language", )
         userPrefManager.setLanguage(language)
-
-//        navigateToDashboardFragment()
     }
 }

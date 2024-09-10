@@ -189,4 +189,71 @@
         <item>Noyabr</item>
         <item>Dekabr</item>
     </string-array>
+    <string name="nazorat">Nazorat</string>
+    <string name="haydovchilar_nazorat_vaqti_kelgan_iltimos_ushbu_so_ralgan_suratlarni_tasvirga_olib_nazorat_ko_rigidan_o_ting">Haydovchilar nazorat vaqti kelgan. Iltimos ushbu so\'ralgan suratlarni tasvirga olib, nazorat ko\'rigidan o\'ting!</string>
+    <string name="mashinaning_chap_tomoni">Mashinaning chap tomoni</string>
+    <string name="mashinaning_o_ng_tomoni">Mashinaning o\'ng tomoni</string>
+    <string name="mashinaning_old_tomoni">Mashinaning old tomoni</string>
+    <string name="mashinaning_orqa_tomoni">Mashinaning orqa tomoni</string>
+    <string name="mashinaning_old_o_rindiqlari">Mashinaning old o\'rindiqlari</string>
+    <string name="mashinaning_orqa_o_rindiqlari">Mashinaning orqa o\'rindiqlari</string>
+    <string name="mashina_raqami_selfi_bilan">Mashina raqami selfi bilan</string>
+    <string name="haydovchilik_guvohnomasi">Haydovchilik guvohnomasi</string>
+    <string name="bonus_orqali_to_lov">Bonus orqali to\'lov</string>
+    <string name="bonus_summani_kiriting">Bonus summani kiriting</string>
+    <string name="tasdiqlash_kodini_kiriting">Tasdiqlash kodini kiriting</string>
+    <string name="qr">Qr Bonus</string>
+    <string name="message">Xabarlar</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="xabarlar_tarixi">Xabarlar tarixi</string>
+    <string name="about_order">Buyurtma haqida</string>
+    <string name="price">Narxi</string>
+
+    <string name="success_check_photo">Surat nazoratidan muvaffaqiyatli o\'tdiz!</string>
+    <string name="foto_nazorat">Foto nazorat</string>
+
+    <string name="summani_kiriting">Summani kiriting</string>
+    <string name="to_lov_tizimini_tanlang">To\'lov tizimini tanlang</string>
+
+
+    <string name="next_button_for_phone">Next button for phone</string>
+    <string name="back_show_price_button">back show price button</string>
+    <string name="payment_click">payment click</string>
+    <string name="payment_payme">payment payme</string>
+    <string name="payment_uzum">payment uzum</string>
+    <string name="next_for_phone">next for phone</string>
+    <string name="yaqin_atrofdagi_buyurtmani_topish_hattoki_fonda_bo_lsa_ham">Yaqin atrofdagi buyurtmani topish, hattoki fonda bo\'lsa ham.</string>
+    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Harakatlanishingizni kuzatish va ularni Bekjaan taxi mijozlari uchun ko\'rsatish va xabardor qilish.</string>
+    <string name="sozlamalarni_tekshiring">Sozlamalarni tekshiring!</string>
+    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Bekjaan Taxi(Driver) ilovasi joylashuvingizni doimiy ravishda kuzatishga ruxsat berishingizni so\'raydi. Ushbu dastur joylashuvingizdan quyidagilar uchun foydalanadi:</string>
+    <string name="o_tkazib_yuborish">O\'tkazib yuborish</string>
+    <string name="ruxsatnomalar">Ruxsatnomalar</string>
+    <string name="dasturdan_to_laqonli_foydalanishingiz_uchun_ushbu_ruxsatnomalarga_ruxsat_berishingiz_zarur">Dasturdan to\'laqonli foydalanishingiz uchun ushbu ruxsatnomalarga ruxsat berishingiz zarur.</string>
+    <string name="sozlamalarni_tekshirish">Sozlamalarni tekshirish</string>
+    <string name="joylashuv_uchun_ruxsatlar_va_gps">Joylashuv uchun ruxsatlar va GPS</string>
+    <string name="aniq_joylashuv_uchun_ruxsat">Aniq joylashuv uchun ruxsat</string>
+    <string name="boshqa_dasturlar_ustidan_ochilish">Boshqa dasturlar ustidan ochilish</string>
+    <string name="quvvat_tejashni_o_chirish">Quvvat tejashni o\'chirish</string>
+    <string name="battery_permission">Bekjaan Taxi(Driver) dasturi fonda ham muntazam ravishda ishlashi uchun quvvat tejash rejimini faolsizlantirish zarur.\nBuni keyinchalik sozlamalar bo\'limidan o\'chirib qo\'yishingiz mumkin.</string>
+    <string name="new_order">Yangi buyurtma</string>
+    <string name="auto">Tizim</string>
+    <string name="night">Tungi</string>
+    <string name="day">Kunduzgi</string>
+    <string name="small">Kichik</string>
+    <string name="large">Katta</string>
+    <string name="navigation">Navigatsiya</string>
+    <string name="theme">Fon rejimi</string>
+    <string name="permission_denied">Ruxsat rad etildi</string>
+    <string name="location_background_1">Orqa fon joylashuvi</string>
+    <string name="overlay_perm">Dasturlar ustidan ochilish</string>
+    <string name="batter_perm">Quvvat tejash rejimini faolsizlantirish</string>
+
+
+    <string name="settings">Sozlamalar</string>
+    <string name="my_profile">Mening profilim</string>
+
+    <string name="taxminiy_narx">Taxminiy narx</string>
+    <string name="ruxsat_berilmagan">"Siz %1$s uchun ruxsatni rad etdingiz. Bu ruxsat dastur funksiyalarining to\'g\'ri ishlashi uchun muhim. Iltimos, sozlamalardan bunga ruxsat bering.</string>
+    <string name="location">Joylashuv</string>
+    <string name="messag">Xabar</string>
 </resources>

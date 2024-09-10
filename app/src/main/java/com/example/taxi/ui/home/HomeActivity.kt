@@ -116,7 +116,8 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
 
             orderDataUpdate?.let {
                 if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED && orderDataUpdate.data.id == userPreferenceManager.getOrderId()) {
-                    userPreferenceManager.saveStartCostUpdate(it.data.startCost)
+                    userPreferenceManager.saveStartCostUpdate(it.data.startCost, it.data.getCostPerKm())
+
                 } else {
                     orderViewModel.updateItem(updateItem = it.data.toOrderData())
                 }
@@ -280,47 +281,8 @@ class HomeActivity : AppCompatActivity(), ServiceConnection {
         bindService(
             Intent(this, DriveBackGroundService::class.java), this, Context.BIND_AUTO_CREATE
         )
-        val currentDestinationId = navController.currentDestination?.id
-        if (userPreferenceManager.getStatusIsTaximeter()) {
-            if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
-                when (userPreferenceManager.getDriverStatus()) {
-                    UserPreferenceManager.DriverStatus.STARTED -> {
-                        Log.d("taxometer", "onStart: start")
-                        driverViewModel.startedOrder()
-                        Log.d("xatolik", "onStart:start ishladi ")
-                    }
-                    UserPreferenceManager.DriverStatus.ARRIVED ->{
-                        driverViewModel.arrivedOrder()
-                        Log.d("taxometer", "onStart: arrive")
 
-                    }
-                    UserPreferenceManager.DriverStatus.ACCEPTED ->{
-                        driverViewModel.acceptedOrder()
-                        Log.d("taxometer", "onStart: accept")
 
-                    }
-
-                    else -> {}
-                }
-                navController.navigate(R.id.taximeterFragment)
-            }
-        } else {
-            if (currentDestinationId != R.id.driverFragment) {
-                if (userPreferenceManager.getDriverStatus() != UserPreferenceManager.DriverStatus.COMPLETED) {
-                    when (userPreferenceManager.getDriverStatus()) {
-                        UserPreferenceManager.DriverStatus.STARTED -> {
-                            driverViewModel.startedOrder()
-                            Log.d("xatolik", "onStart:start ishladi ")
-                        }
-
-                        UserPreferenceManager.DriverStatus.ARRIVED -> driverViewModel.arrivedOrder()
-                        UserPreferenceManager.DriverStatus.ACCEPTED -> driverViewModel.acceptedOrder()
-                        else -> {}
-                    }
-                    navController.navigate(R.id.driverFragment)
-                }
-            }
-        }
     }
 
     override fun onDestroy() {

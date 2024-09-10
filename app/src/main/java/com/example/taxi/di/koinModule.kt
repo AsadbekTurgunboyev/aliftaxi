@@ -125,7 +125,7 @@ val koinModule = module {
 //    viewModel { SplashViewModel(get()) }
     viewModel { DriveReportViewModel(get(), get(), get(), get()) }
 
-    viewModel{NetworkViewModel(get())}
+    viewModel{NetworkViewModel(get(),get())}
 //    factory { GetRegisterResponseUseCase(registerRepository = get()) }
     factory { GetMainResponseUseCase(mainRepository = get()) }
     factory { PrivacyPolicyService(get()) }

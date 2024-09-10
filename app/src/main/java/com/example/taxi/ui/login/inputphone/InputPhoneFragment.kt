@@ -106,6 +106,9 @@ class InputPhoneFragment : Fragment() {
                     Toast.makeText(requireContext(), "${resource.message} ${resource.data}", Toast.LENGTH_SHORT).show()
 
                 }
+
+
+                else -> {}
             }
         }
 

@@ -72,6 +72,7 @@ class SocketMessageProcessor(
                 }
                 SocketConfig.ORDER_UPDATE ->{
                     val intent = Intent("com.example.taxi.ORDER_DATA_ACTION")
+                    Log.d("ozgarish", "handleSocketMessage: $message")
                     intent.putExtra("orderData_update", message)
                     activity.sendBroadcast(intent)
                 }

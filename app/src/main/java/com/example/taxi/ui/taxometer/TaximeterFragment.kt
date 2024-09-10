@@ -3,6 +3,7 @@ package com.example.taxi.ui.taxometer
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -12,6 +13,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.telephony.PhoneStateListener
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -34,6 +37,8 @@ import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.order.OrderAccept
 import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.preference.UserPreferenceManager
+import com.example.taxi.network.MyPhoneStateListener
+import com.example.taxi.network.NetworkViewModel
 import com.example.taxi.ui.home.DriveAction
 import com.example.taxi.ui.home.HomeViewModel
 import com.example.taxi.ui.home.driver.DriverViewModel
@@ -60,6 +65,7 @@ import com.tapadoo.alerter.Alerter
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
@@ -68,7 +74,12 @@ class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
     private lateinit var locationCallback: LocationCallback
     private var currentBottomStatus = DriveAction.ARRIVED
     private lateinit var locationTracker: LocationTracker
+    private val networkViewModel: NetworkViewModel by viewModel()
     private val driverViewModel: DriverViewModel by sharedViewModel()
+
+
+    private lateinit var phoneStateListener: MyPhoneStateListener
+    private lateinit var telephonyManager: TelephonyManager
 
     private val preferenceManager: UserPreferenceManager by inject()
     private val homeViewModel: HomeViewModel by sharedViewModel()
@@ -99,6 +110,32 @@ class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
         }
 
     lateinit var viewBinding: FragmentDriverBinding
+
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val isTax = arguments?.getBoolean("is_taxo", false)
+        if (isTax == true) {
+            if (homeViewModel.dashboardLiveData.value?.isPaused() == true) {
+                homeViewModel.startDrive()
+
+            } else {
+                homeViewModel.startDrive()
+            }
+            driverViewModel.completeTaximeter()
+            preferenceManager.saveStatusIsTaximeter(true)
+            preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.STARTED)
+            preferenceManager.saveLastRaceId(-1)
+        }
+
+        telephonyManager = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        phoneStateListener = MyPhoneStateListener(requireContext()) { isSpeedNormal ->
+            if (isSpeedNormal) {
+                networkViewModel.getOrderCurrent()
+            }
+        }
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -241,6 +278,12 @@ class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        telephonyManager.listen(phoneStateListener, PhoneStateListener.LISTEN_NONE)
+
+    }
+
     private fun setFinishDialog() {
         val dialog = Dialog(requireContext())
         dialog.setContentView(R.layout.dialog_ask_finish)
@@ -260,12 +303,13 @@ class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
 //            homeViewModel.startDrive()
 
+            preferenceManager.saveStatusIsTaximeter(false)
             preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.COMPLETED)
-
+            driverViewModel.acceptTaximeter()
             homeViewModel.stopDrive()
             viewBinding.parentContainer.keepScreenOn = false
             dialog.dismiss()
-            driverViewModel.completedOrder()
+
 
         }
         cancelButton.setOnClickListener {
@@ -328,7 +372,10 @@ class TaximeterFragment : Fragment(), LocationTracker.LocationUpdateListener {
 
                     val orderSettings = resource.data?.data
                     orderSettings?.let { it1 -> preferenceManager.savePriceSettings(it1) }
-                    driverViewModel.startedOrder()
+
+                    driverViewModel.completeTaximeter()
+                    preferenceManager.saveStatusIsTaximeter(true)
+
                     homeViewModel.startDrive()
                     preferenceManager.setDriverStatus(UserPreferenceManager.DriverStatus.STARTED)
                     preferenceManager.saveLastRaceId(-1)

@@ -2,6 +2,7 @@ package com.example.taxi.domain.model.socket
 
 import com.example.taxi.domain.model.order.Address
 import com.example.taxi.domain.model.order.OrderData
+import com.example.taxi.domain.model.order.Settings
 import com.example.taxi.domain.model.order.Type
 import com.squareup.moshi.*
 
@@ -33,8 +34,14 @@ data class SocketOnlyForYouData(
     @Json(name = "longitude2") val longitude2: String?,
     val comment: String?,
     val mode: SocketMode,
+    val settings: List<Settings>?,
     val distance: Int? = 0
-)
+){
+    fun getCostPerKm(): Int {
+        val setting = settings?.find { it.name == "cost_per_km" }
+        return setting?.value?.toIntOrNull() ?: 0
+    }
+}
 
 @JsonClass(generateAdapter = true)
 data class   SocketType(
@@ -60,6 +67,7 @@ data class SocketMode(
     val number: Int,
     val name: String
 )
+
 
 fun SocketOnlyForYouData.toOrderData(): OrderData<Address> {
     return OrderData(

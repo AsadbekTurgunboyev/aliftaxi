@@ -23,7 +23,7 @@
             android:src="@drawable/ic_ss_arrow_back"
             android:layout_gravity="center_vertical"
             android:layout_height="@dimen/_20sdp"
-            app:tint="@color/black" />
+            app:tint="@color/text_black_white" />
 
         <TextView
             android:id="@+id/title_finish_dialog"
@@ -257,7 +257,7 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_price"
                     android:layout_width="match_parent"
-                    android:hint="1000"
+                    android:textColor="@color/text_black_white"
                     android:layout_marginTop="@dimen/_5sdp"
                     android:paddingHorizontal="@dimen/_10sdp"
                     android:paddingVertical="@dimen/_7sdp"

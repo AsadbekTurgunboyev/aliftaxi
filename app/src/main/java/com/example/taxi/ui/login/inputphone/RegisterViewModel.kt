@@ -1,5 +1,6 @@
 package com.example.taxi.ui.login.inputphone
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -43,10 +44,10 @@ class RegisterViewModel(private val getRegisterResponseUseCase: GetRegisterRespo
 
                         }
 
-
                     },
                     { error ->
 
+                        Log.d("tekshirish", "register: ${error.message}")
                         _registerResponse.postValue(
                             Resource(
                                 ResourceState.ERROR,

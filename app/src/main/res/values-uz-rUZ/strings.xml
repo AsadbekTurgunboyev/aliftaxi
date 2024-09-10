@@ -153,7 +153,7 @@
 
     <string name="downloading">Юкланмоқда..</string>
     <string name="finish">Якунлаш</string>
-    <string name="arrive">Ётиб келдим</string>
+    <string name="arrive">Етиб келдим</string>
 
     <string name="lets_go">Кетдик</string>
     <string name="hisobni_to_ldirish">Ҳисобни тўлдириш</string>
@@ -174,7 +174,6 @@
     <string name="buyurtmani_rostdan_ham_yakunlamoqchimisiz">Буюртмани ростдан ҳам якунламоқчимисиз?</string>
     <string name="buyurtmani_yakunlaganingizdan_so_ng_u_yakunlangan_buyurtmalar_safiga_qo_shiladi_va_u_haqidagi_ma_lumotlarni_tarix_bo_limidan_topishingiz_mumkin_bo_ladi">Буюртмани якунлаганингиздан сўнг у якунланган буюртмалар сафига қўшилади ва у ҳақидаги маълумотларни Тарих бўлимидан топишингиз мумкин бўлади</string>
     <string name="yakunlash">Якунлаш</string>
-    <string name="taximeter">Taxometer</string>
 
 
     <string-array name="month_names">
@@ -191,4 +190,65 @@
         <item>Ноябр</item>
         <item>Декабр</item>
     </string-array>
+    <string name="taximeter">Тахометер</string>
+    <string name="bonus_orqali_to_lov">Бонус орқали тўлов</string>
+    <string name="bonus_summani_kiriting">Бонус суммани киритинг</string>
+    <string name="tasdiqlash_kodini_kiriting">Тасдиқлаш кодини киритинг</string>
+    <string name="qr">Қр Бонус</string>
+    <string name="message">Хабарлар</string>
+    <string name="hello_blank_fragment">Салом бўш фрагмент</string>
+    <string name="xabarlar_tarixi">Хабарлар тарихи</string>
+    <string name="about_order">Буюртма ҳақида</string>
+    <string name="price">Нархи</string>
+    <string name="success_check_photo">Сурат назоратидан муваффақиятли ўтдингиз!</string>
+    <string name="foto_nazorat">Фото назорат</string>
+
+    <string name="nazorat">Назорат</string>
+    <string name="haydovchilar_nazorat_vaqti_kelgan_iltimos_ushbu_so_ralgan_suratlarni_tasvirga_olib_nazorat_ko_rigidan_o_ting">Ҳайдовчилар назорат вақти келган. Илтимос ушбу сўралган суратларни тасвирга олиб, назорат кўригидан ўтинг!</string>
+    <string name="mashinaning_chap_tomoni">Машинанинг чап томони</string>
+    <string name="mashinaning_o_ng_tomoni">Машинанинг ўнг томони</string>
+    <string name="mashinaning_old_tomoni">Машинанинг олд томони</string>
+    <string name="mashinaning_orqa_tomoni">Машинанинг орқа томони</string>
+    <string name="mashinaning_old_o_rindiqlari">Машинанинг олд ўриндиқлари</string>
+    <string name="mashinaning_orqa_o_rindiqlari">Машинанинг орқа ўриндиқлари</string>
+    <string name="mashina_raqami_selfi_bilan">Машина рақами селфи билан</string>
+    <string name="haydovchilik_guvohnomasi">Ҳайдовчилик гувоҳномаси</string>
+
+    <string name="summani_kiriting">Суммани киритинг</string>
+    <string name="to_lov_tizimini_tanlang">Тўлов тизимини танланг</string>
+
+
+    <string name="settings">Созламалар</string>
+    <string name="my_profile">Менинг профилим</string>
+
+    <string name="taxminiy_narx">Такминан нарх</string>
+    <string name="new_order">Янги буюртма</string>
+    <string name="auto">Тизим</string>
+    <string name="night">Тунги</string>
+    <string name="day">Кундузги</string>
+    <string name="small">Кичик</string>
+    <string name="large">Катта</string>
+    <string name="navigation">Навигация</string>
+    <string name="theme">Фон режими</string>
+    <string name="permission_denied">Рухсат рад этилди</string>
+    <string name="ruxsat_berilmagan">"Сиз %1$s учун рухсатни рад этдингиз. Бу рухсат дастур функцияларининг тўғри ишлаши учун муҳим. Илтимос, созламалардан бунга рухсат беринг.</string>
+    <string name="location">Жойлашув</string>
+    <string name="location_background_1">Орқа фон жойлашуви</string>
+    <string name="overlay_perm">Дастурлар устида очилиш</string>
+    <string name="batter_perm">Қувват тежаш режимини фаолсизлантириш</string>
+    <string name="messag">Хабар</string>
+
+    <string name="yaqin_atrofdagi_buyurtmani_topish_hattoki_fonda_bo_lsa_ham">Яқин атрофдаги буюртмани топиш, ҳаттоки фонда бўлса ҳам.</string>
+    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Ҳаракатланишингизни кузатиш ва уларни Бекжаан такси мижозлари учун кўрсатиш ва хабардор қилиш.</string>
+    <string name="sozlamalarni_tekshiring">Созламаларни текширинг!</string>
+    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Бекжаан Такси(драйвер) иловаси жойлашувингизни доимий равишда кузатишга рухсат беришингизни сўрайди. Ушбу дастур жойлашувингиздан қуйидагилар учун фойдаланади:</string>
+    <string name="o_tkazib_yuborish">Ўтказиб юбориш</string>
+    <string name="ruxsatnomalar">Рухсатномалар</string>
+    <string name="dasturdan_to_laqonli_foydalanishingiz_uchun_ushbu_ruxsatnomalarga_ruxsat_berishingiz_zarur">Дастурдан тўлақонли фойдаланишингиз учун ушбу рухсатномаларга рухсат беришингиз зарур.</string>
+    <string name="sozlamalarni_tekshirish">Созламаларни текшириш</string>
+    <string name="joylashuv_uchun_ruxsatlar_va_gps">Жойлашув учун рухсатлар ва GPS</string>
+    <string name="aniq_joylashuv_uchun_ruxsat">Аниқ жойлашув учун рухсат</string>
+    <string name="boshqa_dasturlar_ustidan_ochilish">Бошқа дастурлар устида очилиш</string>
+    <string name="quvvat_tejashni_o_chirish">Қувват тежашни ўчириш</string>
+    <string name="battery_permission">Бекжаан Такси(драйвер) дастури фонда ҳам мунтазам равишда ишлаши учун қувват тежаш режими фаолсизлантириш зарур.\nБуни кейинчалик созламалар бўлимидан ўчириб қўйишингиз мумкин.</string>
 </resources>

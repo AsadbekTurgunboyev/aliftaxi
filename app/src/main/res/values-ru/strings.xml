@@ -173,8 +173,20 @@
     <string name="buyurtmani_rostdan_ham_yakunlamoqchimisiz">Вы действительно хотите завершить заказ?</string>
     <string name="buyurtmani_yakunlaganingizdan_so_ng_u_yakunlangan_buyurtmalar_safiga_qo_shiladi_va_u_haqidagi_ma_lumotlarni_tarix_bo_limidan_topishingiz_mumkin_bo_ladi">После завершения вашего заказа, он будет добавлен в список завершенных заказов, и вы сможете найти информацию о нем в разделе \'История\'.</string>
     <string name="yakunlash">Завершить</string>
-    <string name="taximeter">Taxometer</string>
+    <string name="taximeter">Тахометер</string>
+    <string name="nazorat">Контроль</string>
+    <string name="haydovchilar_nazorat_vaqti_kelgan_iltimos_ushbu_so_ralgan_suratlarni_tasvirga_olib_nazorat_ko_rigidan_o_ting">Водители, пришло время осмотра. Пожалуйста, возьмите фотографии, указанные ниже, и перейдите к осмотру!</string>
+    <string name="mashinaning_chap_tomoni">Левая сторона машины</string>
+    <string name="mashinaning_o_ng_tomoni">Правая сторона машины</string>
+    <string name="mashinaning_old_tomoni">Передняя сторона машины</string>
+    <string name="mashinaning_orqa_tomoni">Задняя сторона машины</string>
+    <string name="mashinaning_old_o_rindiqlari">Повреждения передней стороны машины</string>
+    <string name="mashinaning_orqa_o_rindiqlari">Повреждения задней стороны машины</string>
+    <string name="mashina_raqami_selfi_bilan">Сфотографируйте номер машины селфи</string>
+    <string name="haydovchilik_guvohnomasi">Водительское удостоверение</string>
 
+    <string name="summani_kiriting">Введите сумму</string>
+    <string name="to_lov_tizimini_tanlang">Выберите платежную систему</string>
 
     <string-array name="month_names">
         <item>Январь</item>
@@ -191,4 +203,49 @@
         <item>Декабрь</item>
     </string-array>
 
+    <string name="bonus_orqali_to_lov">Оплата через бонус</string>
+    <string name="bonus_summani_kiriting">Введите сумму бонуса</string>
+    <string name="tasdiqlash_kodini_kiriting">Введите код подтверждения</string>
+    <string name="qr">Бонус QR</string>
+    <string name="message">Сообщения</string>
+    <string name="hello_blank_fragment">Привет, пустой фрагмент</string>
+    <string name="xabarlar_tarixi">История сообщений</string>
+    <string name="about_order">О заказе</string>
+    <string name="price">Цена</string>
+    <string name="success_check_photo">Вы успешно прошли проверку фото!</string>
+    <string name="foto_nazorat">Контроль фото</string>
+
+    <string name="settings">Настройки</string>
+    <string name="my_profile">Мой профиль</string>
+
+    <string name="taxminiy_narx">Ориентировочная цена</string>
+    <string name="new_order">Новый заказ</string>
+    <string name="auto">Система</string>
+    <string name="night">Ночной</string>
+    <string name="day">Дневной</string>
+    <string name="small">Маленький</string>
+    <string name="large">Большой</string>
+    <string name="navigation">Навигация</string>
+    <string name="theme">Тема</string>
+    <string name="permission_denied">Разрешение отказано</string>
+    <string name="ruxsat_berilmagan">"Вы отказали в разрешении для %1$s. Это разрешение важно для корректной работы функций приложения. Пожалуйста, предоставьте это разрешение в настройках.</string>
+    <string name="location">Местоположение</string>
+    <string name="location_background_1">Фон местоположения</string>
+    <string name="overlay_perm">Наложение поверх приложений</string>
+    <string name="batter_perm">Отключение режима экономии энергии</string>
+    <string name="messag">Сообщение</string>
+
+    <string name="yaqin_atrofdagi_buyurtmani_topish_hattoki_fonda_bo_lsa_ham">Поиск ближайших заказов, даже если приложение работает в фоновом режиме.</string>
+    <string name="harakatlanishingizni_kuzatish_va_ularni_bekjaan_taxi_mijozlari_uchun_ko_rsatish_va_xabardor_qilish">Отслеживание вашего движения и уведомление клиентов Bekjaan Taxi.</string>
+    <string name="sozlamalarni_tekshiring">Проверьте настройки!</string>
+    <string name="bekjaan_taxi_driver_ilovasi_joylashuvingizni_doimiy_ravishda_kuzatishga_ruxsat_berishingizni_so_raydi_ushbu_dastur_joylashuvingizdan_quyidagilar_uchun_foydalanadi">Приложение Bekjaan Taxi (Driver) просит разрешить постоянное отслеживание вашего местоположения. Это приложение использует ваше местоположение для следующих целей:</string>
+    <string name="o_tkazib_yuborish">Пропустить</string>
+    <string name="ruxsatnomalar">Разрешения</string>
+    <string name="dasturdan_to_laqonli_foydalanishingiz_uchun_ushbu_ruxsatnomalarga_ruxsat_berishingiz_zarur">Для полного использования приложения необходимо предоставить эти разрешения.</string>
+    <string name="sozlamalarni_tekshirish">Проверьте настройки</string>
+    <string name="joylashuv_uchun_ruxsatlar_va_gps">Разрешения для местоположения и GPS</string>
+    <string name="aniq_joylashuv_uchun_ruxsat">Разрешение для точного местоположения</string>
+    <string name="boshqa_dasturlar_ustidan_ochilish">Открытие поверх других приложений</string>
+    <string name="quvvat_tejashni_o_chirish">Отключение энергосбережения</string>
+    <string name="battery_permission">Для постоянной работы приложения Bekjaan Taxi (Driver) в фоновом режиме необходимо отключить режим энергосбережения.\nЭто можно отключить позже в разделе настроек.</string>
 </resources>

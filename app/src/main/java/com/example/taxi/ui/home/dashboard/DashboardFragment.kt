@@ -33,11 +33,14 @@ import com.example.taxi.di.MAIN_URL
 import com.example.taxi.domain.model.IsCompletedModel
 import com.example.taxi.domain.model.MainResponse
 import com.example.taxi.domain.model.balance.BalanceData
+import com.example.taxi.domain.model.order.OrderAccept
+import com.example.taxi.domain.model.order.UserModel
 import com.example.taxi.domain.model.selfie.SelfieAllData
 import com.example.taxi.domain.model.selfie.StatusModel
 import com.example.taxi.domain.model.settings.SettingsData
 import com.example.taxi.domain.preference.UserPreferenceManager
 import com.example.taxi.network.NetworkReceiver
+import com.example.taxi.network.NetworkViewModel
 import com.example.taxi.socket.SocketMessageProcessor
 import com.example.taxi.socket.SocketRepository
 import com.example.taxi.socket.SocketService
@@ -80,6 +83,9 @@ class DashboardFragment : Fragment() {
     private val driverViewModel: DriverViewModel by sharedViewModel()
     private val dashboardViewModel: DashboardViewModel by viewModel()
     private val userPreferenceManager: UserPreferenceManager by inject()
+
+
+    private val networkViewModel: NetworkViewModel by viewModel()
 
     var isNewOrder: Boolean = false
 
@@ -159,6 +165,11 @@ class DashboardFragment : Fragment() {
         getAllData()
         viewBinding.refresh.setOnRefreshListener {
             getAllData()
+            networkViewModel.getOrderCurrent()
+        }
+
+        networkViewModel.driverStatus.observe(viewLifecycleOwner) {
+            updateStatus(it)
         }
 
         userPreferenceManager.timeClear()
@@ -299,6 +310,7 @@ class DashboardFragment : Fragment() {
         Log.d(TAG, "onStop: ")
 //        context?.unregisterReceiver(networkReceiver)
         lifecycleScope.cancel()
+        networkViewModel.resetData()
     }
 
 
@@ -695,5 +707,44 @@ class DashboardFragment : Fragment() {
         }
     }
 
+
+    override fun onStart() {
+        super.onStart()
+        networkViewModel.getOrderCurrent()
+    }
+
+    private fun updateStatus(response: Resource<MainResponse<OrderAccept<UserModel>>?>?) {
+        when (response?.state) {
+            ResourceState.LOADING -> {
+
+            }
+
+            ResourceState.SUCCESS -> {
+                if (response.data?.data?.type?.number == 4) {
+                    val currentDestinationId = navController.currentDestination?.id
+                    if (currentDestinationId != R.id.taximeterFragment) {
+                        val bundle = Bundle()
+                        bundle.putBoolean("is_taxo", true)
+                        navController.navigate(R.id.taximeterFragment, bundle)
+                    }
+                } else {
+                    val currentDestinationId = navController.currentDestination?.id
+                    if (currentDestinationId != R.id.driverFragment) {
+                        val bundle = Bundle()
+                        val position = response.data?.data?.currentPosition
+                        val arrivedAt = response.data?.data?.arrivedAt
+                        val startedAt = response.data?.data?.startedAt
+                        position?.let { bundle.putInt("driver_current_position", it) }
+                        arrivedAt?.let { bundle.putInt("driver_arrivedAt", it) }
+                        startedAt?.let { bundle.putInt("driver_startedAt", it) }
+                        navController.navigate(R.id.driverFragment,bundle)
+                    }
+                }
+            }
+
+            ResourceState.ERROR -> {}
+            else -> {}
+        }
+    }
 
 }

@@ -31,6 +31,7 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
         value = DriveAction.ACCEPT
     }
 
+    val orderSCTaximeter = MutableLiveData<Int>()
 
     private val _transferWithBonus = MutableLiveData<Resource<MainResponse<BonusResponse>>>()
     val transferWithBonus: LiveData<Resource<MainResponse<BonusResponse>>> get() = _transferWithBonus
@@ -274,6 +275,15 @@ class DriverViewModel(private val mainResponseUseCase: GetMainResponseUseCase) :
 
     fun  completedOrder() {
         orderStartCompleteLiveData.postValue(DriveAction.COMPLETED)
+    }
+
+
+    fun acceptTaximeter(){
+        orderSCTaximeter.postValue(DriveAction.TAX_STARTED)
+    }
+
+    fun completeTaximeter(){
+        orderSCTaximeter.postValue(DriveAction.TAX_COMPLETED)
     }
 
 

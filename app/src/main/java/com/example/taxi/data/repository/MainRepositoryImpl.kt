@@ -134,7 +134,7 @@ class MainRepositoryImpl(private val apiService: ApiService) : MainRepository {
         return apiService.getFAQ()
     }
 
-    override fun getCurrentOrder(): Observable<MainResponse<Any>> {
+    override fun getCurrentOrder(): Observable<MainResponse<OrderAccept<UserModel>>> {
         return apiService.getOrderCurrent()
     }
 

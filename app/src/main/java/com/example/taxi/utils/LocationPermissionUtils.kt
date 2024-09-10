@@ -8,8 +8,11 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.common.api.ApiException
@@ -19,21 +22,36 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsStatusCodes
 
-
 object LocationPermissionUtils {
 
     private val locPermissionLiveData = MutableLiveData<LocPermissionStatus>()
 
     fun compute(context: Context) {
-        val locationPermission = PermissionChecker.checkSelfPermission(
+        val fineLocationPermission = PermissionChecker.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PermissionChecker.PERMISSION_GRANTED
 
+        val coarseLocationPermission = PermissionChecker.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PermissionChecker.PERMISSION_GRANTED
+
+        val backgroundLocationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            PermissionChecker.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PermissionChecker.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
         val locationEnabled = isLocationEnabled(context)
 
         locPermissionLiveData.value = LocPermissionStatus(
-            locationPermission = locationPermission,
+            fineLocationPermission = fineLocationPermission,
+            coarseLocationPermission = coarseLocationPermission,
+            backgroundLocationPermission = backgroundLocationPermission,
             locationEnabled = locationEnabled
         )
     }
@@ -46,6 +64,29 @@ object LocationPermissionUtils {
         ) == PermissionChecker.PERMISSION_GRANTED
     }
 
+    fun isCoarsePermissionGranted(context: Context): Boolean {
+        return PermissionChecker.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PermissionChecker.PERMISSION_GRANTED
+    }
+
+    fun isPowerSavingModeEnabled(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+    fun isBackgroundPermissionGranted(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PermissionChecker.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
     fun shouldShowRationaleBasicPermission(activity: Activity): Boolean {
         return ActivityCompat.shouldShowRequestPermissionRationale(
             activity,
@@ -53,8 +94,38 @@ object LocationPermissionUtils {
         )
     }
 
+    fun shouldShowRationaleCoarsePermission(activity: Activity): Boolean {
+        return ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+    }
+
+    fun shouldShowRationaleBackgroundPermission(activity: Activity): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                activity,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
+        } else {
+            false
+        }
+    }
+
     fun getBasicPermissions(): Array<String> {
         return arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+
+    fun getCoarsePermissions(): Array<String> {
+        return arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
+    fun getBackgroundPermissions(): Array<String> {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        } else {
+            emptyArray()
+        }
     }
 
     fun getAppPermissionSettingPageIntent(): Intent {
@@ -151,7 +222,9 @@ object LocationPermissionUtils {
     }
 
     data class LocPermissionStatus(
-        val locationPermission: Boolean,
+        val fineLocationPermission: Boolean,
+        val coarseLocationPermission: Boolean,
+        val backgroundLocationPermission: Boolean,
         val locationEnabled: Boolean
     )
 
